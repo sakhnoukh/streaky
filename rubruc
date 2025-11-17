@@ -1,0 +1,136 @@
+Requirements (what you must deliver)
+
+
+Project & Deadline
+
+
+Build a new small, cloud-native app on Azure (not your individual assignment).
+
+
+Demo & mini Sprint Review: 2025-12-04.
+
+
+
+
+Team & Roles
+
+
+Up to 6 people; rotating Product Owner and Scrum Master; everyone is Dev/DevOps.
+
+
+
+
+Cloud Infrastructure
+
+
+Create a Resource Group and organize all assets.
+
+
+Use ≥ 3 Azure services (examples: App Service, SQL/Cosmos DB, Storage, Azure DevOps, Application Insights/Azure Monitor).
+
+
+
+
+Development & Functionality
+
+
+Small REST or full-stack app.
+
+
+Backend in Python (Flask/FastAPI) or Node.js (Express).
+
+
+Frontend optional/minimal (basic HTML/React).
+
+
+
+
+DevOps Pipeline
+
+
+CI/CD with auto build → test → deploy → monitor.
+
+
+Git version control (Azure Repos).
+
+
+
+
+Testing
+
+
+Include automated tests; maintain code quality.
+
+
+
+
+Monitoring, Logging & Reliability
+
+
+Integrate Application Insights/Azure Monitor.
+
+
+Build dashboards for uptime, response time, error rate.
+
+
+
+
+Documentation & Process
+
+
+README with architecture diagram, setup, usage.
+
+
+Product Backlog (Kanban/boards), Scrum artifacts (Sprint backlog snapshots, Reviews, Retrospectives, Definition of Done).
+
+
+Individual Blackboard upload: contribution statement + links + AI usage acknowledgment.
+
+
+
+
+Evaluation Rubric (100 pts total)
+
+
+Development & Functionality — 25 pts
+
+
+Cloud Infrastructure — 20 pts
+
+
+DevOps Pipeline — 20 pts
+
+
+Testing & Code Quality — 15 pts
+
+
+Monitoring, Logging & Reliability — 10 pts
+
+
+Documentation & Process — 10 pts
+
+
+Suggested Sprint Flow (example)
+
+
+Sprint 0 (prep): pick idea, draft backlog, ensure Azure access, define MVP & architecture.
+
+
+Sprint 1: set up Azure + repo; deploy “Hello World” skeleton.
+
+
+Sprint 2: core features, tests, full CI/CD.
+
+
+Sprint 3: DB integration, logging, monitoring, code reviews, deployment polish.
+
+
+Sprint 4: UI/API polish, docs, retrospective; demo.
+
+
+Optional Extensions (nice-to-have)
+
+
+IaC (Bicep/Terraform/ARM), Docker/Azure Container Apps, blue-green/rolling deploys.
+
+

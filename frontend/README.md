@@ -27,7 +27,7 @@ npm install
 npm run dev
 ```
 
-The app will be available at **http://localhost:3000**
+The app will be available at **http://localhost:5000**
 
 ## Features
 
@@ -98,7 +98,7 @@ npm run preview
 
 ## Environment
 
-- **Dev server:** http://localhost:3000
+- **Dev server:** http://localhost:5000
 - **API endpoint:** http://localhost:8002
 - **Token storage:** localStorage (key: 'token')
 

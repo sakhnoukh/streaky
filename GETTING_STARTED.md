@@ -52,7 +52,7 @@ npm run dev
 ```
   VITE v5.1.0  ready in 500 ms
 
-  ➜  Local:   http://localhost:3000/
+  ➜  Local:   http://localhost:5000/
   ➜  Network: use --host to expose
 ```
 
@@ -62,7 +62,7 @@ npm run dev
 
 ### Step 3: Open the App
 
-Open your browser to: **http://localhost:3000**
+Open your browser to: **http://localhost:5000**
 
 You should see the Streaky login page! 🎉
 
@@ -274,7 +274,7 @@ uvicorn app.main:app --reload --port 8002
 cd frontend && npm run dev
 
 # Browser
-http://localhost:3000
+http://localhost:5000
 ```
 
 **That's it!** 🎉 You're now tracking habits with a beautiful UI!
