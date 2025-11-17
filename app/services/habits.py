@@ -1,0 +1,53 @@
+from datetime import date, timedelta
+from typing import Literal
+
+from app.policies.goal import DailyPolicy, GoalPolicy, WeeklyPolicy
+from app.repositories.base import EntryRepository, HabitRepository
+from app.utils.streak import best_streak, current_streak
+
+Goal = Literal["daily", "weekly"]
+
+
+def _policy(goal: Goal) -> GoalPolicy:
+    return DailyPolicy() if goal == "daily" else WeeklyPolicy()
+
+
+class HabitService:
+    def __init__(self, habits: HabitRepository, entries: EntryRepository):
+        self.habits, self.entries = habits, entries
+
+    def create(self, user_id: int, name: str, goal: Goal = "daily"):
+        if self.habits.exists_name(user_id, name):
+            raise ValueError("name_exists")
+        return self.habits.create(user_id, name, goal)
+
+    def log_today(self, habit_id: int, today: date):
+        if not self.habits.get(habit_id):
+            raise LookupError("not_found")
+        if not self.entries.exists_on(habit_id, today):
+            self.entries.create(habit_id, today)
+
+    def list_with_streaks(self, user_id: int, today: date):
+        out = []
+        for h in self.habits.list_by_user(user_id):
+            # Fetch last 365 days to calculate current streak
+            start = today - timedelta(days=365)
+            dates = set(self.entries.dates_between(h.id, start, today))
+            out.append({"id": h.id, "name": h.name, "goal_type": h.goal_type,
+                        "streak": current_streak(dates, today)})
+        return out
+
+    def stats(self, habit_id: int, days: int, today: date):
+        h = self.habits.get(habit_id)
+        if not h:
+            raise LookupError("not_found")
+        pol = _policy(h.goal_type)  # type: ignore[arg-type]
+        start, end = pol.window(days, today)
+        ds = set(self.entries.dates_between(h.id, start, end))
+        return {
+            "habit_id": h.id,
+            "current_streak": current_streak(ds, today),
+            "best_streak": best_streak(ds),
+            "days": [{"date": d.isoformat(), "done": pol.is_hit(ds, d)}
+                     for d in (start + timedelta(n) for n in range((end-start).days+1))]
+        }

@@ -1,0 +1,80 @@
+from datetime import date
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
+from app.db import SessionLocal
+from app.dependencies import get_current_user
+from app.repositories.entries import SqlAlchemyEntryRepository
+from app.repositories.habits import SqlAlchemyHabitRepository
+from app.schemas import HabitCreate, HabitLog, HabitOut, HabitWithStreak, StatsOut
+from app.services.habits import HabitService
+
+router = APIRouter()
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+def get_habit_service(db: Session = Depends(get_db)) -> HabitService:
+    habits_repo = SqlAlchemyHabitRepository(db)
+    entries_repo = SqlAlchemyEntryRepository(db)
+    return HabitService(habits_repo, entries_repo)
+
+@router.post("/habits", response_model=HabitOut)
+def create_habit(
+    habit: HabitCreate,
+    service: HabitService = Depends(get_habit_service),
+    current_user: int = Depends(get_current_user),
+):
+    try:
+        # Validate goal_type
+        if habit.goal_type not in ["daily", "weekly"]:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid goal_type. Must be 'daily' or 'weekly'",
+            )
+        created_habit = service.create(current_user, habit.name, habit.goal_type)  # type: ignore
+        return created_habit
+    except ValueError as e:
+        if str(e) == "name_exists":
+            raise HTTPException(
+                status_code=409, detail="Habit name already exists"
+            ) from e
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+@router.get("/habits", response_model=list[HabitWithStreak])
+def list_habits(
+    service: HabitService = Depends(get_habit_service),
+    current_user: int = Depends(get_current_user),
+):
+    return service.list_with_streaks(current_user, date.today())
+
+@router.post("/habits/{habit_id}/entries")
+def log_entry(
+    habit_id: int,
+    entry: HabitLog,
+    service: HabitService = Depends(get_habit_service),
+    current_user: int = Depends(get_current_user),
+):
+    try:
+        service.log_today(habit_id, entry.date)
+        return {"ok": True}
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail="Habit not found") from e
+
+@router.get("/habits/{habit_id}/stats", response_model=StatsOut)
+def get_stats(
+    habit_id: int,
+    range: str,
+    service: HabitService = Depends(get_habit_service),
+    current_user: int = Depends(get_current_user),
+):
+    days = 7 if range == "7d" else 30
+    try:
+        return service.stats(habit_id, days, date.today())
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail="Habit not found") from e

@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+sqlalchemy
+python-dotenv
+alembic
+pydantic-settings
+python-jose
+python-multipart
