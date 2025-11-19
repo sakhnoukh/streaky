@@ -7,7 +7,7 @@ from app.db import SessionLocal
 from app.dependencies import get_current_user
 from app.repositories.entries import SqlAlchemyEntryRepository
 from app.repositories.habits import SqlAlchemyHabitRepository
-from app.schemas import HabitCreate, HabitLog, HabitOut, HabitWithStreak, StatsOut
+from app.schemas import HabitCreate, HabitUpdate, HabitLog, HabitOut, HabitWithStreak, StatsOut
 from app.services.habits import HabitService
 
 router = APIRouter()
@@ -76,5 +76,38 @@ def get_stats(
     days = 7 if range == "7d" else 30
     try:
         return service.stats(habit_id, days, date.today())
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail="Habit not found") from e
+
+@router.put("/habits/{habit_id}", response_model=HabitOut)
+def update_habit(
+    habit_id: int,
+    habit: HabitUpdate,
+    service: HabitService = Depends(get_habit_service),
+    current_user: int = Depends(get_current_user),
+):
+    try:
+        # Validate goal_type if provided
+        if habit.goal_type and habit.goal_type not in ["daily", "weekly"]:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid goal_type. Must be 'daily' or 'weekly'",
+            )
+        updated_habit = service.update(habit_id, habit.name, habit.goal_type)
+        if not updated_habit:
+            raise HTTPException(status_code=404, detail="Habit not found")
+        return updated_habit
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail="Habit not found") from e
+
+@router.delete("/habits/{habit_id}")
+def delete_habit(
+    habit_id: int,
+    service: HabitService = Depends(get_habit_service),
+    current_user: int = Depends(get_current_user),
+):
+    try:
+        service.delete(habit_id)
+        return {"ok": True}
     except LookupError as e:
         raise HTTPException(status_code=404, detail="Habit not found") from e

@@ -34,8 +34,19 @@ class HabitService:
             start = today - timedelta(days=365)
             dates = set(self.entries.dates_between(h.id, start, today))
             out.append({"id": h.id, "name": h.name, "goal_type": h.goal_type,
-                        "streak": current_streak(dates, today)})
+                        "streak": current_streak(dates, today),
+                        "best_streak": best_streak(dates)})
         return out
+
+    def update(self, habit_id: int, name: str | None, goal_type: str | None):
+        if not self.habits.get(habit_id):
+            raise LookupError("not_found")
+        return self.habits.update(habit_id, name, goal_type)
+
+    def delete(self, habit_id: int):
+        if not self.habits.get(habit_id):
+            raise LookupError("not_found")
+        return self.habits.delete(habit_id)
 
     def stats(self, habit_id: int, days: int, today: date):
         h = self.habits.get(habit_id)

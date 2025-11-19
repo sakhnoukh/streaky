@@ -8,6 +8,11 @@ class HabitCreate(BaseModel):
     goal_type: str
 
 
+class HabitUpdate(BaseModel):
+    name: str | None = None
+    goal_type: str | None = None
+
+
 class HabitLog(BaseModel):
     date: date
 
@@ -24,6 +29,7 @@ class HabitWithStreak(BaseModel):
     name: str
     goal_type: str
     streak: int
+    best_streak: int
 
 class StatsOut(BaseModel):
     habit_id: int

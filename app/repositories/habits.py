@@ -29,3 +29,23 @@ class SqlAlchemyHabitRepository(HabitRepository):
             .first()
             is not None
         )
+
+    def update(self, habit_id: int, name: str | None, goal_type: str | None) -> Habit | None:
+        habit = self.get(habit_id)
+        if not habit:
+            return None
+        if name is not None:
+            habit.name = name
+        if goal_type is not None:
+            habit.goal_type = goal_type
+        self.session.commit()
+        self.session.refresh(habit)
+        return habit
+
+    def delete(self, habit_id: int) -> bool:
+        habit = self.get(habit_id)
+        if not habit:
+            return False
+        self.session.delete(habit)
+        self.session.commit()
+        return True
