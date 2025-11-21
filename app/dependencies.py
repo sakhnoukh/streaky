@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
@@ -13,8 +14,8 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> int:
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
-        user_id: int | None = payload.get("user_id")
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        user_id: Optional[int] = payload.get("user_id")
         if user_id is None:
             raise credentials_exception
     except JWTError as e:
