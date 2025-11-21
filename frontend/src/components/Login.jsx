@@ -1,12 +1,23 @@
 import { useState } from 'react'
 
-function Login({ onLogin, error }) {
-  const [username, setUsername] = useState('testuser')
-  const [password, setPassword] = useState('testpass')
+function Login({ onLogin, onRegister, error }) {
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [isRegisterMode, setIsRegisterMode] = useState(false)
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    onLogin(username, password)
+    if (isRegisterMode) {
+      onRegister(username, password)
+    } else {
+      onLogin(username, password)
+    }
+  }
+
+  const toggleMode = () => {
+    setIsRegisterMode(!isRegisterMode)
+    setUsername('')
+    setPassword('')
   }
 
   return (
@@ -38,18 +49,21 @@ function Login({ onLogin, error }) {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter password"
               required
+              minLength="6"
             />
           </div>
 
           {error && <div className="error-message">{error}</div>}
 
           <button type="submit" className="login-btn">
-            Login
+            {isRegisterMode ? 'Register' : 'Login'}
           </button>
         </form>
 
-        <div className="login-hint">
-          <small>Dev credentials: testuser / testpass</small>
+        <div className="login-toggle">
+          <button type="button" onClick={toggleMode} className="toggle-btn">
+            {isRegisterMode ? 'Already have an account? Login' : 'Need an account? Register'}
+          </button>
         </div>
       </div>
     </div>

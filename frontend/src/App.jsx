@@ -40,6 +40,27 @@ function App() {
     setToast({ message, type })
   }
 
+  const handleRegister = async (username, password) => {
+    try {
+      setError(null)
+      await axios.post(`${API_URL}/auth/register`, {
+        username,
+        password
+      })
+      
+      // Auto-login after successful registration
+      showToast('Account created! Logging you in... 🎉', 'success')
+      setTimeout(() => handleLogin(username, password), 500)
+    } catch (err) {
+      if (err.response?.status === 409) {
+        setError('Username already exists. Please choose another.')
+      } else {
+        setError('Registration failed. Please try again.')
+      }
+      console.error('Register error:', err)
+    }
+  }
+
   const handleLogin = async (username, password) => {
     try {
       setError(null)
@@ -145,7 +166,7 @@ function App() {
   }
 
   if (!token) {
-    return <Login onLogin={handleLogin} error={error} />
+    return <Login onLogin={handleLogin} onRegister={handleRegister} error={error} />
   }
 
   return (
