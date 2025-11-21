@@ -12,3 +12,4 @@ opencensus-ext-azure
 azure-identity
 azure-keyvault-secrets
 psutil
+passlib[bcrypt]
