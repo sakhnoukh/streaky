@@ -1,7 +1,8 @@
 from datetime import date, timedelta
+from typing import Set
 
 
-def current_streak(dates: set[date], today: date) -> int:
+def current_streak(dates: Set[date], today: date) -> int:
     if today not in dates:
         return 0
     streak, cur = 1, today
@@ -9,7 +10,7 @@ def current_streak(dates: set[date], today: date) -> int:
         streak += 1
     return streak
 
-def best_streak(dates: set[date]) -> int:
+def best_streak(dates: Set[date]) -> int:
     if not dates:
         return 0
     s, seen = 0, set(dates)

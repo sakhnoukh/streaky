@@ -35,4 +35,4 @@ class StatsOut(BaseModel):
     habit_id: int
     current_streak: int
     best_streak: int
-    days: list[dict]
+    days: List[dict]
