@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
+from app.db import create_tables
 from app.logging import setup_logging_middleware
 from app.monitoring import MonitoringMiddleware
 from app.routers import auth, habits
@@ -15,6 +16,11 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc"
 )
+
+# Create database tables on startup
+@app.on_event("startup")
+async def startup_event():
+    create_tables()
 
 # Configure CORS for frontend (Azure + local)
 app.add_middleware(

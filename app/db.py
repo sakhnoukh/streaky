@@ -26,3 +26,8 @@ else:
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
+
+# Function to create all tables
+def create_tables():
+    """Create all database tables"""
+    Base.metadata.create_all(bind=engine)
