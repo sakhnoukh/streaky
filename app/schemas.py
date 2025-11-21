@@ -1,4 +1,5 @@
 from datetime import date
+from typing import Optional, List
 
 from pydantic import BaseModel
 
@@ -9,8 +10,8 @@ class HabitCreate(BaseModel):
 
 
 class HabitUpdate(BaseModel):
-    name: str | None = None
-    goal_type: str | None = None
+    name: Optional[str] = None
+    goal_type: Optional[str] = None
 
 
 class HabitLog(BaseModel):

@@ -1,3 +1,4 @@
+from typing import Optional, List
 from sqlalchemy.orm import Session
 
 from app.models import Habit
@@ -16,10 +17,10 @@ class SqlAlchemyHabitRepository(HabitRepository):
         self.session.refresh(habit)
         return habit
 
-    def get(self, habit_id: int) -> Habit | None:
+    def get(self, habit_id: int) -> Optional[Habit]:
         return self.session.query(Habit).filter(Habit.id == habit_id).first()
 
-    def list_by_user(self, user_id: int) -> list[Habit]:
+    def list_by_user(self, user_id: int) -> List[Habit]:
         return self.session.query(Habit).filter(Habit.user_id == user_id).all()
 
     def exists_name(self, user_id: int, name: str) -> bool:
@@ -30,7 +31,7 @@ class SqlAlchemyHabitRepository(HabitRepository):
             is not None
         )
 
-    def update(self, habit_id: int, name: str | None, goal_type: str | None) -> Habit | None:
+    def update(self, habit_id: int, name: Optional[str], goal_type: Optional[str]) -> Optional[Habit]:
         habit = self.get(habit_id)
         if not habit:
             return None

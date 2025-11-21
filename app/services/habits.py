@@ -1,5 +1,5 @@
 from datetime import date, timedelta
-from typing import Literal
+from typing import Literal, Optional
 
 from app.policies.goal import DailyPolicy, GoalPolicy, WeeklyPolicy
 from app.repositories.base import EntryRepository, HabitRepository
@@ -38,7 +38,7 @@ class HabitService:
                         "best_streak": best_streak(dates)})
         return out
 
-    def update(self, habit_id: int, name: str | None, goal_type: str | None):
+    def update(self, habit_id: int, name: Optional[str], goal_type: Optional[str]):
         if not self.habits.get(habit_id):
             raise LookupError("not_found")
         return self.habits.update(habit_id, name, goal_type)
