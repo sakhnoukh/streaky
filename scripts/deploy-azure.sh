@@ -5,7 +5,7 @@
 set -e  # Exit on error
 
 # Configuration
-RESOURCE_GROUP="streaky-prod-rg"
+RESOURCE_GROUP="BCSAI2025-DEVOPS-STUDENT-1B"
 LOCATION="eastus"
 SQL_SERVER="streaky-sql-server"
 SQL_DATABASE="streaky-db"
@@ -17,11 +17,14 @@ APP_INSIGHTS="streaky-insights"
 
 echo "🚀 Starting Azure Deployment for Streaky..."
 
-# 1. Create Resource Group
-echo "📦 Creating Resource Group: $RESOURCE_GROUP"
-az group create \
-  --name $RESOURCE_GROUP \
-  --location $LOCATION
+# 1. Verify Resource Group exists (using existing student resource group)
+echo "📦 Using Existing Resource Group: $RESOURCE_GROUP"
+if ! az group show --name $RESOURCE_GROUP &> /dev/null; then
+    echo "❌ Error: Resource group $RESOURCE_GROUP does not exist"
+    echo "Please create it first or update RESOURCE_GROUP variable in this script"
+    exit 1
+fi
+echo "✅ Resource group verified"
 
 # 2. Create Azure SQL Server
 echo "💾 Creating Azure SQL Server: $SQL_SERVER"

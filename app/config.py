@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings
-from typing import Literal
+from typing import Literal, Optional
 
 
 class Settings(BaseSettings):
@@ -11,10 +11,10 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./streaky.db"
     
     # Azure SQL (optional - if provided, overrides DATABASE_URL)
-    AZURE_SQL_SERVER: str | None = None
+    AZURE_SQL_SERVER: Optional[str] = None
     AZURE_SQL_DATABASE: str = "streaky-db"
-    AZURE_SQL_USERNAME: str | None = None
-    AZURE_SQL_PASSWORD: str | None = None
+    AZURE_SQL_USERNAME: Optional[str] = None
+    AZURE_SQL_PASSWORD: Optional[str] = None
     AZURE_SQL_DRIVER: str = "ODBC Driver 18 for SQL Server"
     
     # Authentication
@@ -23,11 +23,11 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
     # Application Insights
-    APPINSIGHTS_INSTRUMENTATION_KEY: str | None = None
-    APPINSIGHTS_CONNECTION_STRING: str | None = None
+    APPINSIGHTS_INSTRUMENTATION_KEY: Optional[str] = None
+    APPINSIGHTS_CONNECTION_STRING: Optional[str] = None
     
     # Azure Key Vault (optional)
-    AZURE_KEY_VAULT_URL: str | None = None
+    AZURE_KEY_VAULT_URL: Optional[str] = None
     
     # CORS
     ALLOWED_ORIGINS: str = "http://localhost:5000,http://localhost:5001,http://127.0.0.1:5000"
@@ -46,7 +46,7 @@ class Settings(BaseSettings):
         return self.DATABASE_URL
     
     @property
-    def cors_origins(self) -> list[str]:
+    def cors_origins(self) -> list:
         """Parse CORS origins from comma-separated string"""
         return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",")]
     

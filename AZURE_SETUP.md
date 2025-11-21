@@ -24,9 +24,9 @@ az login
 ./scripts/deploy-azure.sh
 ```
 
-This will create all necessary resources. **Save the output** - you'll need the resource names!
+Streakypass123!?
 
----
+This will create all necessary resources. **Save the output** - you'll need the resource names!---
 
 ## 📦 Manual Setup (Step-by-Step)
 
@@ -39,14 +39,14 @@ az login
 ### Step 2: Create Resource Group
 
 ```bash
-# Create resource group
-az group create \
-  --name streaky-prod-rg \
-  --location eastus
+# Verify your existing resource group
+az group show --name BCSAI2025-DEVOPS-STUDENT-1B
 
-# Verify
-az group list --output table
+# List all resources in the group
+az resource list --resource-group BCSAI2025-DEVOPS-STUDENT-1B --output table
 ```
+
+**Note:** We're using your existing student resource group `BCSAI2025-DEVOPS-STUDENT-1B` instead of creating a new one.
 
 ### Step 3: Create Azure SQL Database
 
@@ -54,14 +54,14 @@ az group list --output table
 # Create SQL Server
 az sql server create \
   --name streaky-sql-server \
-  --resource-group streaky-prod-rg \
+  --resource-group BCSAI2025-DEVOPS-STUDENT-1B \
   --location eastus \
   --admin-user sqladmin \
   --admin-password 'YourSecurePassword123!'
 
 # Allow Azure services to access SQL Server
 az sql server firewall-rule create \
-  --resource-group streaky-prod-rg \
+  --resource-group BCSAI2025-DEVOPS-STUDENT-1B \
   --server streaky-sql-server \
   --name AllowAzureServices \
   --start-ip-address 0.0.0.0 \
@@ -69,7 +69,7 @@ az sql server firewall-rule create \
 
 # Create database
 az sql db create \
-  --resource-group streaky-prod-rg \
+  --resource-group BCSAI2025-DEVOPS-STUDENT-1B \
   --server streaky-sql-server \
   --name streaky-db \
   --service-objective Basic \
@@ -84,7 +84,7 @@ az sql db create \
 # Create App Service Plan (Linux)
 az appservice plan create \
   --name streaky-plan \
-  --resource-group streaky-prod-rg \
+  --resource-group BCSAI2025-DEVOPS-STUDENT-1B \
   --location eastus \
   --is-linux \
   --sku B1
@@ -92,7 +92,7 @@ az appservice plan create \
 # Create Web App
 az webapp create \
   --name streaky-api \
-  --resource-group streaky-prod-rg \
+  --resource-group BCSAI2025-DEVOPS-STUDENT-1B \
   --plan streaky-plan \
   --runtime "PYTHON:3.13"
 ```
@@ -104,13 +104,13 @@ az webapp create \
 az monitor app-insights component create \
   --app streaky-insights \
   --location eastus \
-  --resource-group streaky-prod-rg \
+  --resource-group BCSAI2025-DEVOPS-STUDENT-1B \
   --application-type web
 
 # Get Instrumentation Key
 az monitor app-insights component show \
   --app streaky-insights \
-  --resource-group streaky-prod-rg \
+  --resource-group BCSAI2025-DEVOPS-STUDENT-1B \
   --query instrumentationKey \
   --output tsv
 ```
@@ -123,7 +123,7 @@ az monitor app-insights component show \
 # Create storage account (name must be globally unique, lowercase, no hyphens)
 az storage account create \
   --name streakyfe12345 \
-  --resource-group streaky-prod-rg \
+  --resource-group BCSAI2025-DEVOPS-STUDENT-1B \
   --location eastus \
   --sku Standard_LRS \
   --kind StorageV2
@@ -142,7 +142,7 @@ az storage blob service-properties update \
 # Set environment variables
 az webapp config appsettings set \
   --name streaky-api \
-  --resource-group streaky-prod-rg \
+  --resource-group BCSAI2025-DEVOPS-STUDENT-1B \
   --settings \
     ENVIRONMENT="production" \
     VERSION="1.0.0" \
@@ -161,18 +161,18 @@ az webapp config appsettings set \
 # Option A: Deploy via Azure CLI (from local)
 az webapp up \
   --name streaky-api \
-  --resource-group streaky-prod-rg \
+  --resource-group BCSAI2025-DEVOPS-STUDENT-1B \
   --runtime "PYTHON:3.13"
 
 # Option B: Configure Git deployment
 az webapp deployment source config-local-git \
   --name streaky-api \
-  --resource-group streaky-prod-rg
+  --resource-group BCSAI2025-DEVOPS-STUDENT-1B
 
 # Get Git URL and push
 az webapp deployment list-publishing-credentials \
   --name streaky-api \
-  --resource-group streaky-prod-rg \
+  --resource-group BCSAI2025-DEVOPS-STUDENT-1B \
   --query scmUri \
   --output tsv
 
@@ -266,12 +266,12 @@ cd ..
 5. Select "Existing Azure Pipelines YAML file"
 6. Path: `/azure-pipelines.yml`
 7. Review the pipeline
-8. **Update variables in pipeline**:
+8. **Update variables in pipeline** (already set correctly):
    ```yaml
    variables:
      azureServiceConnection: 'streaky-azure-connection'
      webAppName: 'streaky-api'
-     resourceGroup: 'streaky-prod-rg'
+     resourceGroup: 'BCSAI2025-DEVOPS-STUDENT-1B'
    ```
 9. Click "Run"
 
@@ -309,7 +309,7 @@ cd ..
 ### Step 1: Access Application Insights
 
 1. Go to Azure Portal: https://portal.azure.com
-2. Navigate to **Resource Groups** > `streaky-prod-rg`
+2. Navigate to **Resource Groups** > `BCSAI2025-DEVOPS-STUDENT-1B`
 3. Click on `streaky-insights`
 
 ### Step 2: Create Custom Dashboard
@@ -390,7 +390,7 @@ https://streakyfe12345.z13.web.core.windows.net
 
 ```bash
 # Stream App Service logs
-az webapp log tail --name streaky-api --resource-group streaky-prod-rg
+az webapp log tail --name streaky-api --resource-group BCSAI2025-DEVOPS-STUDENT-1B
 
 # View Application Insights logs
 # Go to Azure Portal > Application Insights > Logs

@@ -22,7 +22,7 @@ variables:
   pythonVersion: '3.13'
   azureServiceConnection: 'streaky-azure-connection'  # Update with your service connection name
   webAppName: 'streaky-api'  # Update with your App Service name
-  resourceGroup: 'streaky-prod-rg'
+  resourceGroup: 'BCSAI2025-DEVOPS-STUDENT-1B'
 
 stages:
   - stage: Build

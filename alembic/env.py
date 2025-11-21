@@ -28,7 +28,7 @@ target_metadata = Base.metadata
 
 def run_migrations_offline():
     """Run migrations in 'offline' mode."""
-    url = settings.database_url
+    url = settings.database_url_computed
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -42,7 +42,7 @@ def run_migrations_offline():
 
 def run_migrations_online():
     """Run migrations in 'online' mode."""
-    connectable = create_engine(settings.database_url)
+    connectable = create_engine(settings.database_url_computed)
 
     with connectable.connect() as connection:
         context.configure(
