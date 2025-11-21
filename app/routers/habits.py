@@ -1,4 +1,5 @@
 from datetime import date
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -46,7 +47,7 @@ def create_habit(
             ) from e
         raise HTTPException(status_code=400, detail=str(e)) from e
 
-@router.get("/habits", response_model=list[HabitWithStreak])
+@router.get("/habits", response_model=List[HabitWithStreak])
 def list_habits(
     service: HabitService = Depends(get_habit_service),
     current_user: int = Depends(get_current_user),
