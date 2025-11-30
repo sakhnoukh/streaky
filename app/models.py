@@ -9,15 +9,15 @@ from .db import Base
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
+    username = Column(String(255), unique=True, index=True)  # Length required for SQL Server index
+    hashed_password = Column(String(255))
 
 class Habit(Base):
     __tablename__ = "habits"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
-    name: Mapped[str] = mapped_column(String, index=True)
-    goal_type: Mapped[str] = mapped_column(String)  # 'daily' or 'weekly'
+    name: Mapped[str] = mapped_column(String(255), index=True)  # Length required for SQL Server index
+    goal_type: Mapped[str] = mapped_column(String(50))  # 'daily' or 'weekly'
 
     entries = relationship("Entry", back_populates="habit")
 

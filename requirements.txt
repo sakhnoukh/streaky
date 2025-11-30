@@ -6,7 +6,7 @@ alembic
 pydantic-settings
 python-jose
 python-multipart
-pyodbc
+pymssql
 applicationinsights
 opencensus-ext-azure
 azure-identity

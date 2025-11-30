@@ -15,7 +15,6 @@ class Settings(BaseSettings):
     AZURE_SQL_DATABASE: str = "streaky-db"
     AZURE_SQL_USERNAME: Optional[str] = None
     AZURE_SQL_PASSWORD: Optional[str] = None
-    AZURE_SQL_DRIVER: str = "ODBC Driver 18 for SQL Server"
     
     # Authentication
     SECRET_KEY: str = "your-secret-key-change-in-production"
@@ -36,12 +35,10 @@ class Settings(BaseSettings):
     def database_url_computed(self) -> str:
         """Return Azure SQL URL if configured, otherwise SQLite"""
         if self.AZURE_SQL_SERVER and self.AZURE_SQL_USERNAME and self.AZURE_SQL_PASSWORD:
-            # Azure SQL connection string
+            # Azure SQL connection string using pymssql (no ODBC driver needed)
             return (
-                f"mssql+pyodbc://{self.AZURE_SQL_USERNAME}:{self.AZURE_SQL_PASSWORD}"
+                f"mssql+pymssql://{self.AZURE_SQL_USERNAME}:{self.AZURE_SQL_PASSWORD}"
                 f"@{self.AZURE_SQL_SERVER}/{self.AZURE_SQL_DATABASE}"
-                f"?driver={self.AZURE_SQL_DRIVER.replace(' ', '+')}"
-                f"&Encrypt=yes&TrustServerCertificate=no&Connection+Timeout=30"
             )
         return self.DATABASE_URL
     

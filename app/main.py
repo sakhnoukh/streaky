@@ -20,7 +20,12 @@ app = FastAPI(
 # Create database tables on startup
 @app.on_event("startup")
 async def startup_event():
-    create_tables()
+    try:
+        create_tables()
+    except Exception as e:
+        # Log error but don't crash - health endpoint will show DB status
+        import logging
+        logging.error(f"Database initialization failed: {e}")
 
 # Configure CORS for frontend (Azure + local)
 app.add_middleware(
