@@ -24,7 +24,80 @@ A clean, testable FastAPI service for tracking daily and weekly habits with stre
 
 ## Architecture
 
-**Hexagonal Architecture (Ports & Adapters)**:
+### System Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              AZURE CLOUD                                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   ┌──────────────┐     ┌──────────────────────────────────────────────┐     │
+│   │   GitHub     │     │           Azure App Service                  │     │
+│   │   Actions    │────▶│           (streaky-api)                      │     │
+│   │   CI/CD      │     │    ┌─────────────────────────────────┐      │     │
+│   └──────────────┘     │    │         FastAPI App             │      │     │
+│                        │    │  ┌───────────┐ ┌─────────────┐  │      │     │
+│                        │    │  │  Routers  │ │  Services   │  │      │     │
+│   ┌──────────────┐     │    │  │  (HTTP)   │ │ (Business)  │  │      │     │
+│   │   React      │     │    │  └─────┬─────┘ └──────┬──────┘  │      │     │
+│   │   Frontend   │────▶│    │        │              │         │      │     │
+│   │   (Static)   │     │    │  ┌─────▼──────────────▼─────┐   │      │     │
+│   └──────────────┘     │    │  │     Repositories         │   │      │     │
+│                        │    │  │     (Data Access)        │   │      │     │
+│                        │    │  └───────────┬──────────────┘   │      │     │
+│                        │    └──────────────┼──────────────────┘      │     │
+│                        └───────────────────┼─────────────────────────┘     │
+│                                            │                                │
+│                                            ▼                                │
+│                        ┌──────────────────────────────────────┐            │
+│                        │         Azure SQL Database           │            │
+│                        │         (streaky-db)                 │            │
+│                        └──────────────────────────────────────┘            │
+│                                                                              │
+│   ┌──────────────────────────────────────────────────────────────────┐     │
+│   │                    Application Insights                          │     │
+│   │   ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐        │     │
+│   │   │  Logs    │  │ Metrics  │  │  Alerts  │  │Dashboard │        │     │
+│   │   └──────────┘  └──────────┘  └──────────┘  └──────────┘        │     │
+│   └──────────────────────────────────────────────────────────────────┘     │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Hexagonal Architecture (Ports & Adapters)
+
+```
+                 ┌─────────────────────────────────────┐
+    HTTP Request │         FastAPI Routers             │
+    ────────────▶│         (HTTP Adapters)             │
+                 └─────────────┬───────────────────────┘
+                               │
+                               ▼
+                 ┌─────────────────────────────────────┐
+                 │         Service Layer               │
+                 │    (Business Logic / Use Cases)     │◀── Strategy Pattern
+                 │                                     │    (Goal Policies)
+                 └─────────────┬───────────────────────┘
+                               │
+                               ▼
+                 ┌─────────────────────────────────────┐
+                 │      Repository Protocols           │
+                 │           (Ports)                   │
+                 └─────────────┬───────────────────────┘
+                               │
+                               ▼
+                 ┌─────────────────────────────────────┐
+                 │    SQLAlchemy Repositories          │
+                 │        (DB Adapters)                │
+                 └─────────────┬───────────────────────┘
+                               │
+                               ▼
+                          ┌─────────┐
+                          │   DB    │
+                          └─────────┘
+```
+
+**Key Principles:**
 - **Domain Layer**: Pure business logic (services, policies, utils)
 - **Ports**: Repository protocols defining interfaces
 - **Adapters**: SQLAlchemy repositories, FastAPI routers
@@ -337,16 +410,38 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow and guidelines.
 
-## Next Steps (Azure Deployment)
+## Azure Deployment
 
-When Azure access is available:
-- Set up Azure App Service
-- Configure Azure SQL Database or PostgreSQL
-- Set up Application Insights for monitoring
-- Configure CI/CD pipelines
-- Set up deployment slots for staging/production
-- Implement proper user authentication with Azure AD or database
+### Live Endpoints
+
+| Service | URL |
+|---------|-----|
+| **API** | https://streaky-api.azurewebsites.net |
+| **Health Check** | https://streaky-api.azurewebsites.net/health |
+| **API Documentation** | https://streaky-api.azurewebsites.net/docs |
+
+### Azure Resources
+
+| Resource | Type | Location |
+|----------|------|----------|
+| `streaky-api` | App Service | Canada Central |
+| `streaky-sql-server/streaky-db` | SQL Database | East US |
+| `Streaky-insights` | Application Insights | West Europe |
+| `BCSAI2025-DEVOPS-STUDENT-1B` | Resource Group | - |
+
+### CI/CD Pipeline
+
+- **GitHub Actions**: Automated testing on push/PR
+- **Azure Pipelines**: Build → Test → Deploy to Azure App Service
+- **Deployment**: Automatic on merge to `main` branch
+
+### Monitoring
+
+See [docs/MONITORING.md](docs/MONITORING.md) for:
+- Application Insights dashboard setup
+- KQL queries for uptime, response time, error rate
+- Alert configuration
 
 ## License
 
-[Add your license here]
+MIT License

@@ -5,7 +5,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.main import app
 from app.db import Base
-from app.routers.habits import get_db
+from app.routers import habits as habits_router
+from app.routers import auth as auth_router
+from app.routers import monitoring as monitoring_router
 from datetime import date
 
 
@@ -28,7 +30,10 @@ def override_get_db():
 def test_client():
     """Create test client with clean database for each test."""
     Base.metadata.create_all(bind=engine)
-    app.dependency_overrides[get_db] = override_get_db
+    # Override get_db in all routers that define it
+    app.dependency_overrides[habits_router.get_db] = override_get_db
+    app.dependency_overrides[auth_router.get_db] = override_get_db
+    app.dependency_overrides[monitoring_router.get_db] = override_get_db
     client = TestClient(app)
     yield client
     Base.metadata.drop_all(bind=engine)
@@ -38,6 +43,14 @@ def test_client():
 @pytest.fixture
 def auth_token(test_client):
     """Get authentication token for tests."""
+    # First register the test user
+    register_response = test_client.post(
+        "/auth/register",
+        json={"username": "testuser", "password": "testpass"}
+    )
+    assert register_response.status_code == 201, f"Failed to register: {register_response.text}"
+    
+    # Then login to get token
     response = test_client.post(
         "/token",
         data={"username": "testuser", "password": "testpass"}
