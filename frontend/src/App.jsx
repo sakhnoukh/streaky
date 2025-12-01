@@ -43,6 +43,7 @@ function App() {
   const handleRegister = async (username, password) => {
     try {
       setError(null)
+      console.log('Registering with API:', API_URL)
       await axios.post(`${API_URL}/auth/register`, {
         username,
         password
@@ -52,18 +53,23 @@ function App() {
       showToast('Account created! Logging you in... 🎉', 'success')
       setTimeout(() => handleLogin(username, password), 500)
     } catch (err) {
+      console.error('Register error:', err)
       if (err.response?.status === 409) {
         setError('Username already exists. Please choose another.')
+      } else if (err.response?.data?.detail) {
+        setError(`Registration failed: ${err.response.data.detail}`)
+      } else if (err.code === 'ERR_NETWORK') {
+        setError(`Cannot connect to server. API URL: ${API_URL}`)
       } else {
-        setError('Registration failed. Please try again.')
+        setError(`Registration failed: ${err.message || 'Unknown error'}`)
       }
-      console.error('Register error:', err)
     }
   }
 
   const handleLogin = async (username, password) => {
     try {
       setError(null)
+      console.log('Logging in with API:', API_URL)
       const formData = new URLSearchParams()
       formData.append('username', username)
       formData.append('password', password)
@@ -79,8 +85,14 @@ function App() {
       localStorage.setItem('token', access_token)
       showToast('Welcome back! 🎯', 'success')
     } catch (err) {
-      setError('Login failed. Please check your credentials.')
       console.error('Login error:', err)
+      if (err.response?.data?.detail) {
+        setError(`Login failed: ${err.response.data.detail}`)
+      } else if (err.code === 'ERR_NETWORK') {
+        setError(`Cannot connect to server. API URL: ${API_URL}`)
+      } else {
+        setError(`Login failed: ${err.message || 'Please check your credentials.'}`)
+      }
     }
   }
 
