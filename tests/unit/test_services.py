@@ -1,6 +1,6 @@
 """Unit tests for HabitService with fake repositories."""
 from datetime import date, timedelta
-from typing import Iterable
+from typing import Iterable, Optional, List
 import pytest
 from app.services.habits import HabitService
 from app.models import Habit, Entry
@@ -19,10 +19,10 @@ class FakeHabitRepository:
         self.next_id += 1
         return habit
 
-    def get(self, habit_id: int) -> Habit | None:
+    def get(self, habit_id: int) -> Optional[Habit]:
         return self.habits.get(habit_id)
 
-    def list_by_user(self, user_id: int) -> list[Habit]:
+    def list_by_user(self, user_id: int) -> List[Habit]:
         return [h for h in self.habits.values() if h.user_id == user_id]
 
     def exists_name(self, user_id: int, name: str) -> bool:
