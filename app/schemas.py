@@ -37,3 +37,13 @@ class StatsOut(BaseModel):
     current_streak: int
     best_streak: int
     days: List[dict]
+
+class CalendarDay(BaseModel):
+    date: str
+    completed: bool
+
+class CalendarOut(BaseModel):
+    habit_id: int
+    year: int
+    month: int
+    days: List[CalendarDay]

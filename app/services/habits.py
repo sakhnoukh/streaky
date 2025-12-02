@@ -1,5 +1,6 @@
 from datetime import date, timedelta
 from typing import Literal, Optional
+from calendar import monthrange
 
 from app.policies.goal import DailyPolicy, GoalPolicy, WeeklyPolicy
 from app.repositories.base import EntryRepository, HabitRepository
@@ -61,4 +62,40 @@ class HabitService:
             "best_streak": best_streak(ds),
             "days": [{"date": d.isoformat(), "done": pol.is_hit(ds, d)}
                      for d in (start + timedelta(n) for n in range((end-start).days+1))]
+        }
+
+    def calendar(self, habit_id: int, user_id: int, year: int, month: int):
+        h = self.habits.get(habit_id)
+        if not h:
+            raise LookupError("not_found")
+        # Validate that the habit belongs to the user
+        if h.user_id != user_id:
+            raise LookupError("not_found")
+        
+        # Get first and last day of the month
+        first_day = date(year, month, 1)
+        last_day_num = monthrange(year, month)[1]
+        last_day = date(year, month, last_day_num)
+        
+        # Get all entry dates for this habit in the month
+        entry_dates = set(self.entries.dates_between(h.id, first_day, last_day))
+        
+        # Get policy for checking completion
+        pol = _policy(h.goal_type)  # type: ignore[arg-type]
+        
+        # Generate all days in the month
+        days = []
+        current = first_day
+        while current <= last_day:
+            days.append({
+                "date": current.isoformat(),
+                "completed": pol.is_hit(entry_dates, current)
+            })
+            current += timedelta(days=1)
+        
+        return {
+            "habit_id": h.id,
+            "year": year,
+            "month": month,
+            "days": days
         }

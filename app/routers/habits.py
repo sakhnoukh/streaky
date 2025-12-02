@@ -8,7 +8,7 @@ from app.db import SessionLocal
 from app.dependencies import get_current_user
 from app.repositories.entries import SqlAlchemyEntryRepository
 from app.repositories.habits import SqlAlchemyHabitRepository
-from app.schemas import HabitCreate, HabitUpdate, HabitLog, HabitOut, HabitWithStreak, StatsOut
+from app.schemas import HabitCreate, HabitUpdate, HabitLog, HabitOut, HabitWithStreak, StatsOut, CalendarOut
 from app.services.habits import HabitService
 
 router = APIRouter()
@@ -110,5 +110,29 @@ def delete_habit(
     try:
         service.delete(habit_id)
         return {"ok": True}
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail="Habit not found") from e
+
+@router.get("/habits/{habit_id}/calendar", response_model=CalendarOut)
+def get_calendar(
+    habit_id: int,
+    year: int,
+    month: int,
+    service: HabitService = Depends(get_habit_service),
+    current_user: int = Depends(get_current_user),
+):
+    """
+    Get calendar view for a habit showing completion status for each day in a month.
+    
+    Args:
+        habit_id: The ID of the habit
+        year: Year (e.g., 2024)
+        month: Month (1-12)
+    """
+    if not 1 <= month <= 12:
+        raise HTTPException(status_code=400, detail="Month must be between 1 and 12")
+    
+    try:
+        return service.calendar(habit_id, current_user, year, month)
     except LookupError as e:
         raise HTTPException(status_code=404, detail="Habit not found") from e

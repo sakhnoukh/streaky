@@ -5,6 +5,7 @@ import HabitList from './components/HabitList'
 import AddHabit from './components/AddHabit'
 import EditHabit from './components/EditHabit'
 import ConfirmDialog from './components/ConfirmDialog'
+import Calendar from './components/Calendar'
 import Toast from './components/Toast'
 import './App.css'
 
@@ -19,6 +20,7 @@ function App() {
   const [toast, setToast] = useState(null)
   const [editingHabit, setEditingHabit] = useState(null)
   const [deletingHabit, setDeletingHabit] = useState(null)
+  const [viewingCalendar, setViewingCalendar] = useState(null)
 
   // Configure axios defaults
   useEffect(() => {
@@ -201,6 +203,7 @@ function App() {
             onLogEntry={handleLogEntry}
             onEdit={setEditingHabit}
             onDelete={setDeletingHabit}
+            onViewCalendar={setViewingCalendar}
           />
         )}
       </main>
@@ -229,6 +232,16 @@ function App() {
           onCancel={() => setDeletingHabit(null)}
           confirmText="Delete"
           confirmType="danger"
+        />
+      )}
+
+      {viewingCalendar && (
+        <Calendar
+          habit={viewingCalendar}
+          onClose={() => {
+            setViewingCalendar(null)
+            fetchHabits() // Refresh habits to update any changes
+          }}
         />
       )}
     </div>

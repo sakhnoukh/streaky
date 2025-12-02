@@ -363,8 +363,31 @@
   background: rgba(0, 0, 0, 0.1);
 }
 
+.habit-actions-bottom {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.calendar-btn {
+  flex: 1;
+  padding: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.calendar-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
 .log-btn {
-  width: 100%;
+  flex: 1;
   padding: 12px;
   background: #4caf50;
   color: white;
