@@ -240,20 +240,14 @@ jobs:
         VITE_API_URL: https://streaky-api.azurewebsites.net
       run: npm run build
     
-    - name: Login to Azure
-      uses: azure/login@v2
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-    
     - name: Deploy to Azure Storage
-      uses: azure/cli@v2
-      with:
-        inlineScript: |
-          az storage blob upload-batch \
-            --account-name streakyfelix \
-            --destination '$web' \
-            --source frontend/dist \
-            --overwrite
+      run: |
+        az storage blob upload-batch \
+          --account-name streakyfelix \
+          --account-key "${{ secrets.AZURE_STORAGE_KEY }}" \
+          --destination '$web' \
+          --source frontend/dist \
+          --overwrite
 
   badge-update:
     name: Update Badges
