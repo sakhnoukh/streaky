@@ -7,6 +7,7 @@ import EditHabit from './components/EditHabit'
 import ConfirmDialog from './components/ConfirmDialog'
 import Calendar from './components/Calendar'
 import Toast from './components/Toast'
+import TodaySummary from './components/TodaySummary'
 import './App.css'
 
 // Use environment variable for API URL, fallback to localhost
@@ -193,6 +194,7 @@ function App() {
       </header>
 
       <main className="App-main">
+        <TodaySummary habits={habits} />
         <AddHabit onAdd={handleAddHabit} />
         
         {loading ? (

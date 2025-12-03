@@ -2,8 +2,12 @@ function HabitList({ habits, onLogEntry, onEdit, onDelete, onViewCalendar }) {
   if (habits.length === 0) {
     return (
       <div className="empty-state">
-        <h3>No habits yet</h3>
-        <p>Create your first habit to get started!</p>
+        <div className="empty-state-icon">🚀</div>
+        <h3>Start Your Journey</h3>
+        <p>Create your first habit and begin building streaks that stick!</p>
+        <div className="empty-state-tips">
+          <span>💡 Tip: Start small with just one habit</span>
+        </div>
       </div>
     )
   }
@@ -53,6 +57,14 @@ function HabitList({ habits, onLogEntry, onEdit, onDelete, onViewCalendar }) {
                 </div>
               </div>
             </div>
+            
+            {habit.streak >= 7 && (
+              <div className="streak-badge">
+                {habit.streak >= 30 ? '🏆 30+ Day Champion!' : 
+                 habit.streak >= 14 ? '💪 2 Week Warrior!' : 
+                 '🌟 Week Streak!'}
+              </div>
+            )}
 
             <div className="habit-actions-bottom">
               <button

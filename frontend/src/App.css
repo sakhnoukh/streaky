@@ -1,35 +1,78 @@
-/* Login Page */
+/* ============================================
+   STREAKY - Modern Habit Tracker UI
+   ============================================ */
+
+/* ============================================
+   LOGIN PAGE
+   ============================================ */
 .login-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
+  position: relative;
+}
+
+.login-container::before {
+  content: '';
+  position: absolute;
+  top: 20%;
+  left: 10%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, var(--primary-500) 0%, transparent 70%);
+  opacity: 0.1;
+  filter: blur(60px);
+  pointer-events: none;
 }
 
 .login-card {
-  background: white;
-  padding: 40px;
-  border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  background: rgba(31, 41, 55, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 48px 40px;
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    var(--shadow-xl),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+    var(--shadow-glow);
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
   text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-500), var(--accent-500), var(--success-500));
 }
 
 .login-card h1 {
-  font-size: 3rem;
-  margin-bottom: 10px;
+  font-size: 3.5rem;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
 }
 
 .login-card h2 {
-  color: #333;
-  margin-bottom: 10px;
+  color: var(--gray-100);
+  margin-bottom: 8px;
+  font-weight: 700;
+  font-size: 1.75rem;
+  letter-spacing: -0.02em;
 }
 
 .login-subtitle {
-  color: #666;
-  margin-bottom: 30px;
+  color: var(--gray-400);
+  margin-bottom: 32px;
+  font-size: 0.95rem;
 }
 
 .login-form {
@@ -43,70 +86,117 @@
 .form-group label {
   display: block;
   margin-bottom: 8px;
-  color: #333;
+  color: var(--gray-300);
   font-weight: 500;
+  font-size: 0.875rem;
+  letter-spacing: 0.01em;
 }
 
 .form-group input,
 .form-group select {
   width: 100%;
-  padding: 12px;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 16px;
-  transition: border-color 0.3s;
+  padding: 14px 16px;
+  background: rgba(17, 24, 39, 0.6);
+  border: 1px solid var(--gray-700);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  color: var(--gray-100);
+  transition: all var(--transition-base);
+}
+
+.form-group input::placeholder {
+  color: var(--gray-500);
+}
+
+.form-group input:hover,
+.form-group select:hover {
+  border-color: var(--gray-600);
 }
 
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  background: rgba(17, 24, 39, 0.8);
 }
 
 .login-btn {
   width: 100%;
-  padding: 14px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 16px;
+  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
   color: white;
   border: none;
-  border-radius: 8px;
-  font-size: 16px;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
 }
 
 .login-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+}
+
+.login-btn:hover::before {
+  left: 100%;
+}
+
+.login-btn:active {
+  transform: translateY(0);
 }
 
 .login-hint {
   margin-top: 20px;
-  color: #999;
+  color: var(--gray-500);
+  font-size: 0.85rem;
 }
 
 .login-toggle {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #e0e0e0;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--gray-700);
+}
+
+.login-toggle span {
+  color: var(--gray-400);
+  font-size: 0.9rem;
 }
 
 .toggle-btn {
   background: none;
   border: none;
-  color: #667eea;
+  color: var(--primary-400);
   cursor: pointer;
-  font-size: 14px;
-  text-decoration: underline;
-  transition: color 0.2s;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+  margin-left: 4px;
 }
 
 .toggle-btn:hover {
-  color: #764ba2;
+  color: var(--primary-300);
+  text-decoration: underline;
 }
 
-/* Main App */
+/* ============================================
+   MAIN APP LAYOUT
+   ============================================ */
 .App {
   min-height: 100vh;
   display: flex;
@@ -114,226 +204,305 @@
 }
 
 .App-header {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  padding: 20px;
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 16px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .App-header h1 {
-  color: white;
-  font-size: 2rem;
-  margin: 0;
+  color: var(--gray-50);
+  font-size: 1.5rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: -0.02em;
+}
+
+.App-header h1::before {
+  content: '🎯';
+  font-size: 1.3rem;
 }
 
 .logout-btn {
   padding: 10px 20px;
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 2px solid white;
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--gray-300);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  font-weight: 600;
-  transition: all 0.3s;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all var(--transition-base);
 }
 
 .logout-btn:hover {
-  background: white;
-  color: #667eea;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--gray-100);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .App-main {
   flex: 1;
-  padding: 40px 20px;
-  max-width: 1200px;
+  padding: 32px 24px;
+  max-width: 1400px;
   margin: 0 auto;
   width: 100%;
 }
 
-/* Error Messages */
+/* ============================================
+   ERROR MESSAGES
+   ============================================ */
 .error-message {
-  background: #ff4444;
-  color: white;
-  padding: 12px 20px;
-  border-radius: 8px;
+  background: rgba(244, 63, 94, 0.15);
+  color: var(--accent-400);
+  padding: 14px 20px;
+  border-radius: var(--radius-md);
   margin-bottom: 20px;
   text-align: center;
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 
-/* Add Habit */
+/* ============================================
+   ADD HABIT SECTION
+   ============================================ */
 .add-habit-toggle {
   width: 100%;
-  padding: 16px;
-  background: rgba(255, 255, 255, 0.95);
-  border: 3px dashed #667eea;
-  border-radius: 12px;
-  font-size: 18px;
+  padding: 20px;
+  background: rgba(99, 102, 241, 0.08);
+  border: 2px dashed rgba(99, 102, 241, 0.3);
+  border-radius: var(--radius-lg);
+  font-size: 1rem;
   font-weight: 600;
-  color: #667eea;
+  color: var(--primary-400);
   cursor: pointer;
-  transition: all 0.3s;
-  margin-bottom: 30px;
+  transition: all var(--transition-base);
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.add-habit-toggle::before {
+  content: '+';
+  font-size: 1.5rem;
+  font-weight: 300;
 }
 
 .add-habit-toggle:hover {
-  background: white;
+  background: rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.5);
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
 .add-habit-card {
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  margin-bottom: 30px;
+  background: rgba(31, 41, 55, 0.6);
+  backdrop-filter: blur(10px);
+  padding: 28px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--shadow-lg);
+  margin-bottom: 32px;
 }
 
 .add-habit-card h3 {
-  margin-bottom: 20px;
-  color: #333;
+  margin-bottom: 24px;
+  color: var(--gray-100);
+  font-size: 1.25rem;
+  font-weight: 600;
 }
 
 .add-habit-form .form-actions {
   display: flex;
-  gap: 10px;
-  margin-top: 20px;
+  gap: 12px;
+  margin-top: 24px;
 }
 
 .btn-primary {
   flex: 1;
-  padding: 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 14px 20px;
+  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-weight: 600;
+  font-size: 0.95rem;
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: all var(--transition-base);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
 }
 
 .btn-secondary {
   flex: 1;
-  padding: 12px;
-  background: #f5f5f5;
-  color: #666;
-  border: none;
-  border-radius: 8px;
+  padding: 14px 20px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--gray-300);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
   font-weight: 600;
+  font-size: 0.95rem;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all var(--transition-base);
 }
 
 .btn-secondary:hover {
-  background: #e0e0e0;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* Habit List */
+/* ============================================
+   HABIT LIST
+   ============================================ */
 .habit-list h2 {
-  color: white;
-  margin-bottom: 20px;
-  font-size: 1.8rem;
+  color: var(--gray-100);
+  margin-bottom: 24px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .habits-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 20px;
 }
 
+/* ============================================
+   HABIT CARD
+   ============================================ */
 .habit-card {
-  background: white;
-  padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s, box-shadow 0.3s;
+  background: rgba(31, 41, 55, 0.6);
+  backdrop-filter: blur(10px);
+  padding: 24px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-slow);
+  position: relative;
+  overflow: hidden;
+}
+
+.habit-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-500), var(--accent-500));
+  opacity: 0;
+  transition: opacity var(--transition-base);
 }
 
 .habit-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl), var(--shadow-glow);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.habit-card:hover::before {
+  opacity: 1;
 }
 
 .habit-header {
   display: flex;
   justify-content: space-between;
-  align-items: start;
+  align-items: flex-start;
   margin-bottom: 12px;
 }
 
 .habit-header h3 {
-  color: #333;
+  color: var(--gray-100);
   margin: 0;
   flex: 1;
-  font-size: 1.2rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
 }
 
 .habit-actions {
   display: flex;
-  gap: 8px;
+  gap: 4px;
+  margin-left: 12px;
 }
 
 .action-btn {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.05);
   border: none;
-  font-size: 18px;
+  font-size: 14px;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
-  transition: all 0.2s;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
   opacity: 0.6;
+  line-height: 1;
 }
 
 .action-btn:hover {
   opacity: 1;
-  transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .edit-btn:hover {
-  background: rgba(102, 126, 234, 0.1);
+  background: rgba(99, 102, 241, 0.2);
 }
 
 .delete-btn:hover {
-  background: rgba(244, 67, 54, 0.1);
+  background: rgba(244, 63, 94, 0.2);
 }
 
 .goal-badge {
-  background: #f0f0f0;
-  color: #666;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 11px;
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--primary-400);
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
+  letter-spacing: 0.05em;
   display: inline-block;
   margin-bottom: 16px;
 }
 
+/* ============================================
+   HABIT STATS
+   ============================================ */
 .habit-stats {
   display: flex;
-  justify-content: space-around;
+  justify-content: center;
   align-items: center;
-  padding: 20px 0;
+  padding: 20px;
   margin-bottom: 20px;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-md);
+  gap: 32px;
 }
 
 .stat-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .stat-icon {
-  font-size: 2rem;
+  font-size: 1.75rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .stat-content {
@@ -343,95 +512,214 @@
 }
 
 .stat-number {
-  font-size: 1.8rem;
-  font-weight: bold;
-  color: #667eea;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--gray-100);
   line-height: 1;
+  letter-spacing: -0.02em;
 }
 
 .stat-label {
-  color: #999;
-  font-size: 11px;
+  color: var(--gray-500);
+  font-size: 0.7rem;
   text-transform: uppercase;
   font-weight: 600;
   margin-top: 4px;
+  letter-spacing: 0.05em;
 }
 
 .stat-divider {
   width: 1px;
   height: 40px;
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.1);
 }
 
+/* ============================================
+   STREAK BADGES
+   ============================================ */
+.streak-badge {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(245, 158, 11, 0.15) 100%);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  color: #fbbf24;
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 16px;
+  animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.2); }
+  50% { box-shadow: 0 0 0 8px rgba(251, 191, 36, 0); }
+}
+
+/* ============================================
+   HABIT ACTION BUTTONS
+   ============================================ */
 .habit-actions-bottom {
   display: flex;
   gap: 10px;
-  margin-top: 20px;
 }
 
 .calendar-btn {
   flex: 1;
-  padding: 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--gray-300);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
   font-weight: 600;
+  font-size: 0.875rem;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: all var(--transition-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .calendar-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  background: rgba(99, 102, 241, 0.15);
+  border-color: var(--primary-500);
+  color: var(--primary-400);
 }
 
 .log-btn {
   flex: 1;
-  padding: 12px;
-  background: #4caf50;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, var(--success-500) 0%, var(--success-600) 100%);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-weight: 600;
+  font-size: 0.875rem;
   cursor: pointer;
-  transition: background 0.3s, transform 0.2s;
+  transition: all var(--transition-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.log-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
 }
 
 .log-btn:hover {
-  background: #45a049;
-  transform: scale(1.05);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
 }
 
-/* Empty State */
+.log-btn:hover::before {
+  animation: none;
+}
+
+.log-btn:active {
+  transform: translateY(0);
+}
+
+/* ============================================
+   EMPTY STATE
+   ============================================ */
 .empty-state {
   text-align: center;
-  padding: 60px 20px;
-  color: white;
+  padding: 80px 20px;
+  color: var(--gray-400);
+}
+
+.empty-state-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
 }
 
 .empty-state h3 {
-  font-size: 2rem;
-  margin-bottom: 10px;
+  font-size: 1.75rem;
+  margin-bottom: 12px;
+  color: var(--gray-100);
+  font-weight: 700;
 }
 
 .empty-state p {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   opacity: 0.8;
+  max-width: 400px;
+  margin: 0 auto 24px;
+  color: var(--gray-400);
 }
 
-/* Loading */
+.empty-state-tips {
+  display: inline-block;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  padding: 12px 20px;
+  border-radius: var(--radius-full);
+  font-size: 0.9rem;
+  color: var(--primary-400);
+}
+
+/* ============================================
+   LOADING STATE
+   ============================================ */
 .loading {
   text-align: center;
-  padding: 40px;
-  color: white;
-  font-size: 1.2rem;
+  padding: 60px;
+  color: var(--gray-400);
+  font-size: 1.1rem;
 }
 
-/* Responsive */
+.loading::after {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--gray-600);
+  border-top-color: var(--primary-500);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-left: 12px;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
 @media (max-width: 768px) {
+  .App-header {
+    padding: 14px 16px;
+  }
+
   .App-header h1 {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
+  }
+
+  .App-header h1::before {
+    font-size: 1.1rem;
   }
 
   .habits-grid {
@@ -439,6 +727,33 @@
   }
 
   .App-main {
-    padding: 20px 15px;
+    padding: 20px 16px;
+  }
+
+  .login-card {
+    padding: 32px 24px;
+  }
+
+  .habit-stats {
+    gap: 20px;
+    padding: 16px;
+  }
+
+  .stat-number {
+    font-size: 1.5rem;
+  }
+
+  .stat-icon {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .habit-actions-bottom {
+    flex-direction: column;
+  }
+
+  .add-habit-form .form-actions {
+    flex-direction: column;
   }
 }

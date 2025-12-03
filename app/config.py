@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     AZURE_KEY_VAULT_URL: Optional[str] = None
     
     # CORS
-    ALLOWED_ORIGINS: str = "http://localhost:5000,http://localhost:5001,http://127.0.0.1:5000"
+    ALLOWED_ORIGINS: str = "http://localhost:5000,http://localhost:5001,http://localhost:5002,http://localhost:5003,http://localhost:5004,http://localhost:5005,http://127.0.0.1:5000,http://127.0.0.1:5002,https://streakyfelix.z6.web.core.windows.net"
     
     @property
     def database_url_computed(self) -> str:
