@@ -19,7 +19,7 @@ class Habit(Base):
     name: Mapped[str] = mapped_column(String(255), index=True)  # Length required for SQL Server index
     goal_type: Mapped[str] = mapped_column(String(50))  # 'daily' or 'weekly'
 
-    entries = relationship("Entry", back_populates="habit")
+    entries = relationship("Entry", back_populates="habit", cascade="all, delete-orphan")
 
 class Entry(Base):
     __tablename__ = "entries"
