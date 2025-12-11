@@ -10,6 +10,7 @@ from app.repositories.entries import SqlAlchemyEntryRepository
 from app.repositories.habits import SqlAlchemyHabitRepository
 from app.schemas import HabitCreate, HabitUpdate, HabitLog, HabitOut, HabitWithStreak, StatsOut, CalendarOut, EntryOut, EntryUpdate
 from app.services.habits import HabitService
+from app.monitoring import track_habit_created, track_entry_logged
 
 router = APIRouter()
 
@@ -39,6 +40,7 @@ def create_habit(
                 detail="Invalid goal_type. Must be 'daily' or 'weekly'",
             )
         created_habit = service.create(current_user, habit.name, habit.goal_type)  # type: ignore
+        track_habit_created()
         return created_habit
     except ValueError as e:
         if str(e) == "name_exists":
@@ -63,6 +65,7 @@ def log_entry(
 ):
     try:
         service.log_today(habit_id, entry.date, entry.journal)
+        track_entry_logged(habit_id)
         return {"ok": True}
     except LookupError as e:
         raise HTTPException(status_code=404, detail="Habit not found") from e

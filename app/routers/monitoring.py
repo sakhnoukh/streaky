@@ -2,7 +2,7 @@
 Health check and monitoring endpoints
 """
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 import psutil
@@ -11,6 +11,7 @@ import os
 from app.db import SessionLocal
 from app.config import settings
 from app.models import Habit, Entry
+from app.monitoring import get_metrics, CONTENT_TYPE_LATEST
 
 router = APIRouter(tags=["Monitoring"])
 
@@ -82,9 +83,18 @@ def get_version():
 
 
 @router.get("/metrics")
+def prometheus_metrics():
+    """
+    Prometheus metrics endpoint for scraping
+    Returns metrics in Prometheus text format
+    """
+    return Response(content=get_metrics(), media_type=CONTENT_TYPE_LATEST)
+
+
+@router.get("/business-metrics")
 def get_business_metrics(db: Session = Depends(get_db)):
     """
-    Get business metrics for monitoring dashboards
+    Get business metrics for monitoring dashboards (JSON format)
     """
     try:
         # Get database metrics

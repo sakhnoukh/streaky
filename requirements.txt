@@ -7,8 +7,5 @@ pydantic-settings
 python-jose
 python-multipart
 pymssql
-applicationinsights
-opencensus-ext-azure
-azure-identity
-azure-keyvault-secrets
+prometheus-client
 psutil

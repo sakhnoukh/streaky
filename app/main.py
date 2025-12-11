@@ -70,7 +70,8 @@ async def root():
             "monitoring": {
                 "health": "GET /health",
                 "version": "GET /version",
-                "metrics": "GET /metrics",
+                "metrics": "GET /metrics (Prometheus)",
+                "business_metrics": "GET /business-metrics (JSON)",
                 "system": "GET /system"
             }
         }
