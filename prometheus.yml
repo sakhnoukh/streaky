@@ -1,0 +1,41 @@
+# Prometheus configuration for Streaky API monitoring
+global:
+  scrape_interval: 15s  # Scrape targets every 15 seconds
+  evaluation_interval: 15s  # Evaluate rules every 15 seconds
+  external_labels:
+    cluster: 'streaky'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+          # - alertmanager:9093
+
+# Load rules once and periodically evaluate them
+rule_files:
+  # - "alerts.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Scrape Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Scrape Streaky API
+  - job_name: 'streaky-api'
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ['localhost:8002']  # Local development
+        labels:
+          environment: 'development'
+          service: 'streaky-api'
+    # For production, use:
+    # - targets: ['streaky-api.azurewebsites.net']
+    #   labels:
+    #     environment: 'production'
+    #     service: 'streaky-api'

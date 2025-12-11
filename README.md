@@ -426,7 +426,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow and guidelines.
 |----------|------|----------|
 | `streaky-api` | App Service | Canada Central |
 | `streaky-sql-server/streaky-db` | SQL Database | East US |
-| `Streaky-insights` | Application Insights | West Europe |
 | `BCSAI2025-DEVOPS-STUDENT-1B` | Resource Group | - |
 
 ### CI/CD Pipeline
@@ -438,9 +437,17 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow and guidelines.
 ### Monitoring
 
 See [docs/MONITORING.md](docs/MONITORING.md) for:
-- Application Insights dashboard setup
-- KQL queries for uptime, response time, error rate
+- Prometheus metrics collection
+- Grafana dashboard setup
+- PromQL queries for metrics
 - Alert configuration
+
+**Quick Start with Docker Compose:**
+```bash
+docker-compose up -d
+# Access Grafana at http://localhost:3000 (admin/admin)
+# Access Prometheus at http://localhost:9090
+```
 
 ## License
 

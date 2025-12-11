@@ -1,101 +1,177 @@
-# Streaky Monitoring & Dashboards
+# Streaky Monitoring with Prometheus & Grafana
 
-## Azure Resources
+## Overview
 
-| Resource | Type | Location |
-|----------|------|----------|
-| `streaky-api` | App Service | Canada Central |
-| `streaky-sql-server/streaky-db` | SQL Database | East US |
-| `Streaky-insights` | Application Insights | West Europe |
+Streaky API uses **Prometheus** for metrics collection and **Grafana** for visualization and dashboards.
 
-## Application Insights Dashboard
+## Architecture
 
-Access the dashboard at: [Azure Portal - Streaky Insights](https://portal.azure.com/#@/resource/subscriptions/e0b9cada-61bc-4b5a-bd7a-52c606726b3b/resourceGroups/BCSAI2025-DEVOPS-STUDENT-1B/providers/microsoft.insights/components/Streaky-insights/overview)
-
-### Key Metrics
-
-#### 1. Availability / Uptime (%)
-```kusto
-requests
-| summarize availability = round(100.0 * countif(success == true) / count(), 2) by bin(timestamp, 1h)
-| render timechart
+```
+┌─────────────┐         ┌──────────────┐         ┌─────────────┐
+│ Streaky API │────────▶│  Prometheus  │────────▶│   Grafana   │
+│  :8002      │ /metrics│   :9090      │         │   :3000     │
+└─────────────┘         └──────────────┘         └─────────────┘
 ```
 
-#### 2. Average Response Time (ms)
-```kusto
-requests
-| summarize avgDuration = avg(duration) by bin(timestamp, 5m)
-| render timechart
-```
+## Prometheus Setup
 
-#### 3. Error Rate (%)
-```kusto
-requests
-| summarize errorRate = round(100.0 * countif(success == false) / count(), 2) by bin(timestamp, 1h)
-| render timechart
-```
+### Installation
 
-#### 4. Request Count
-```kusto
-requests
-| summarize requestCount = count() by bin(timestamp, 5m)
-| render barchart
-```
-
-#### 5. Failed Requests by Endpoint
-```kusto
-requests
-| where success == false
-| summarize failedCount = count() by name
-| order by failedCount desc
-| render piechart
-```
-
-#### 6. Response Time by Endpoint
-```kusto
-requests
-| summarize avgDuration = avg(duration), p95Duration = percentile(duration, 95) by name
-| order by avgDuration desc
-```
-
-## Creating a Dashboard
-
-### Option 1: Azure Portal (Recommended)
-
-1. Go to [Azure Portal](https://portal.azure.com)
-2. Navigate to **Streaky-insights** Application Insights
-3. Click **Workbooks** > **New**
-4. Add the KQL queries above as separate tiles
-5. Save the workbook as "Streaky Monitoring Dashboard"
-
-### Option 2: Pin to Dashboard
-
-1. Go to **Streaky-insights** > **Logs**
-2. Run each query above
-3. Click **Pin to dashboard** for each result
-4. Select or create "Streaky Monitoring Dashboard"
-
-## Alerts Configuration
-
-### Recommended Alerts
-
-| Alert | Condition | Threshold |
-|-------|-----------|-----------|
-| High Error Rate | Error rate > 5% | 5 minutes |
-| Slow Response | Avg response > 2000ms | 5 minutes |
-| Service Down | Availability < 99% | 5 minutes |
-
-### Creating an Alert
-
+**Using Docker (Recommended):**
 ```bash
-# Example: Create high error rate alert
-az monitor metrics alert create \
-  --name "High Error Rate - Streaky" \
-  --resource-group BCSAI2025-DEVOPS-STUDENT-1B \
-  --scopes /subscriptions/e0b9cada-61bc-4b5a-bd7a-52c606726b3b/resourceGroups/BCSAI2025-DEVOPS-STUDENT-1B/providers/microsoft.insights/components/Streaky-insights \
-  --condition "avg requests/failed > 5" \
-  --window-size 5m \
-  --evaluation-frequency 1m
+docker run -d \
+  --name=prometheus \
+  -p 9090:9090 \
+  -v $(pwd)/prometheus.yml:/etc/prometheus/prometheus.yml \
+  prom/prometheus
+```
+
+**Using Homebrew (macOS):**
+```bash
+brew install prometheus
+prometheus --config.file=prometheus.yml
+```
+
+### Configuration
+
+The Prometheus configuration is in `prometheus.yml`:
+
+```yaml
+scrape_configs:
+  - job_name: 'streaky-api'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['localhost:8002']
+```
+
+### Access Prometheus
+
+- **Web UI**: http://localhost:9090
+- **Metrics Endpoint**: http://localhost:8002/metrics
+
+## Grafana Setup
+
+### Installation
+
+**Using Docker (Recommended):**
+```bash
+docker run -d \
+  --name=grafana \
+  -p 3000:3000 \
+  -e "GF_SECURITY_ADMIN_PASSWORD=admin" \
+  grafana/grafana
+```
+
+**Using Homebrew (macOS):**
+```bash
+brew install grafana
+brew services start grafana
+```
+
+### Configuration
+
+1. **Access Grafana**: http://localhost:3000
+   - Default credentials: `admin` / `admin`
+
+2. **Add Prometheus Data Source**:
+   - Go to Configuration → Data Sources
+   - Add Prometheus
+   - URL: `http://localhost:9090`
+   - Click "Save & Test"
+
+3. **Import Dashboard**:
+   - Go to Dashboards → Import
+   - Upload `infrastructure/grafana-dashboard.json`
+   - Or use dashboard ID: (create and note the ID)
+
+## Available Metrics
+
+### HTTP Metrics
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `http_requests_total` | Counter | Total HTTP requests by method, endpoint, status |
+| `http_request_duration_seconds` | Histogram | Request duration in seconds |
+| `http_request_size_bytes` | Histogram | Request size in bytes |
+| `http_response_size_bytes` | Histogram | Response size in bytes |
+| `http_errors_total` | Counter | Total HTTP errors by type |
+| `active_requests` | Gauge | Current number of active requests |
+
+### Business Metrics
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `habits_created_total` | Counter | Total habits created |
+| `entries_logged_total` | Counter | Total entries logged by habit_id |
+| `active_habits` | Gauge | Number of active habits |
+
+## Dashboard Panels
+
+The Grafana dashboard includes:
+
+1. **HTTP Request Rate** - Requests per second by endpoint
+2. **HTTP Request Duration (p95)** - 95th percentile response time
+3. **Error Rate** - Errors per second by type
+4. **Active Requests** - Current concurrent requests
+5. **Habits Created** - Total habits created counter
+6. **Entries Logged** - Total entries logged counter
+7. **HTTP Status Codes** - Distribution of status codes
+8. **Top Endpoints** - Most requested endpoints
+
+## PromQL Queries
+
+### Request Rate
+```promql
+rate(http_requests_total[5m])
+```
+
+### Error Rate
+```promql
+rate(http_errors_total[5m])
+```
+
+### Average Response Time
+```promql
+rate(http_request_duration_seconds_sum[5m]) / rate(http_request_duration_seconds_count[5m])
+```
+
+### 95th Percentile Response Time
+```promql
+histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
+```
+
+### Top Endpoints
+```promql
+topk(10, sum by (endpoint) (rate(http_requests_total[5m])))
+```
+
+## Alerts
+
+### Recommended Alert Rules
+
+Create `alerts.yml`:
+
+```yaml
+groups:
+  - name: streaky_alerts
+    rules:
+      - alert: HighErrorRate
+        expr: rate(http_errors_total[5m]) > 0.1
+        for: 5m
+        annotations:
+          summary: "High error rate detected"
+      
+      - alert: SlowResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        annotations:
+          summary: "Response time p95 > 2s"
+      
+      - alert: HighActiveRequests
+        expr: active_requests > 100
+        for: 5m
+        annotations:
+          summary: "Too many active requests"
 ```
 
 ## Health Endpoints
@@ -105,12 +181,81 @@ az monitor metrics alert create \
 | `GET /healthz` | Simple liveness check |
 | `GET /health` | Full health with DB status |
 | `GET /version` | App version info |
-| `GET /metrics` | Business metrics |
+| `GET /metrics` | Prometheus metrics (text format) |
+| `GET /business-metrics` | Business metrics (JSON format) |
 | `GET /system` | System resource metrics |
 
-## Live URLs
+## Production Deployment
 
-- **API**: https://streaky-api.azurewebsites.net
-- **Health Check**: https://streaky-api.azurewebsites.net/health
-- **API Docs**: https://streaky-api.azurewebsites.net/docs
-- **Application Insights**: [Azure Portal](https://portal.azure.com/#blade/AppInsightsExtension/QuickPulseBladeV2/ComponentId/%7B%22Name%22%3A%22Streaky-insights%22%2C%22SubscriptionId%22%3A%22e0b9cada-61bc-4b5a-bd7a-52c606726b3b%22%2C%22ResourceGroup%22%3A%22BCSAI2025-DEVOPS-STUDENT-1B%22%7D)
+### Azure App Service
+
+1. **Deploy Prometheus**:
+   - Use Azure Container Instances or VM
+   - Or use managed Prometheus service
+
+2. **Deploy Grafana**:
+   - Use Azure Container Instances
+   - Or use managed Grafana service
+
+3. **Update Prometheus Config**:
+   ```yaml
+   - targets: ['streaky-api.azurewebsites.net']
+     labels:
+       environment: 'production'
+   ```
+
+### Docker Compose
+
+Create `docker-compose.yml`:
+
+```yaml
+version: '3.8'
+services:
+  api:
+    build: .
+    ports:
+      - "8002:8002"
+  
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+  
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+```
+
+## Troubleshooting
+
+### Metrics Not Appearing
+
+1. Check API is running: `curl http://localhost:8002/metrics`
+2. Check Prometheus targets: http://localhost:9090/targets
+3. Check Prometheus config: `promtool check config prometheus.yml`
+
+### Grafana Not Showing Data
+
+1. Verify Prometheus data source is connected
+2. Check time range in Grafana
+3. Verify PromQL queries are correct
+
+## Migration from Application Insights
+
+This setup replaces Application Insights. Key differences:
+
+- **Metrics Format**: Prometheus text format vs. Application Insights JSON
+- **Scraping**: Pull-based (Prometheus) vs. Push-based (App Insights)
+- **Dashboards**: Grafana vs. Azure Portal
+- **Cost**: Self-hosted vs. Azure managed service
+
+## Resources
+
+- [Prometheus Documentation](https://prometheus.io/docs/)
+- [Grafana Documentation](https://grafana.com/docs/)
+- [PromQL Guide](https://prometheus.io/docs/prometheus/latest/querying/basics/)
