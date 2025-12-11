@@ -260,6 +260,14 @@
   color: white;
 }
 
+.calendar-day-clickable {
+  cursor: pointer;
+}
+
+.calendar-day-clickable:active {
+  transform: scale(0.95);
+}
+
 .calendar-check {
   position: absolute;
   top: 3px;

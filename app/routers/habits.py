@@ -8,7 +8,7 @@ from app.db import SessionLocal
 from app.dependencies import get_current_user
 from app.repositories.entries import SqlAlchemyEntryRepository
 from app.repositories.habits import SqlAlchemyHabitRepository
-from app.schemas import HabitCreate, HabitUpdate, HabitLog, HabitOut, HabitWithStreak, StatsOut, CalendarOut
+from app.schemas import HabitCreate, HabitUpdate, HabitLog, HabitOut, HabitWithStreak, StatsOut, CalendarOut, EntryOut, EntryUpdate
 from app.services.habits import HabitService
 
 router = APIRouter()
@@ -62,7 +62,7 @@ def log_entry(
     current_user: int = Depends(get_current_user),
 ):
     try:
-        service.log_today(habit_id, entry.date)
+        service.log_today(habit_id, entry.date, entry.journal)
         return {"ok": True}
     except LookupError as e:
         raise HTTPException(status_code=404, detail="Habit not found") from e
@@ -134,5 +134,69 @@ def get_calendar(
     
     try:
         return service.calendar(habit_id, current_user, year, month)
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail="Habit not found") from e
+
+@router.get("/habits/{habit_id}/entries/{entry_date}", response_model=EntryOut)
+def get_entry(
+    habit_id: int,
+    entry_date: date,
+    service: HabitService = Depends(get_habit_service),
+    current_user: int = Depends(get_current_user),
+):
+    """
+    Get an entry for a specific habit and date, including journal.
+    
+    Args:
+        habit_id: The ID of the habit
+        entry_date: The date of the entry (YYYY-MM-DD)
+    """
+    try:
+        entry = service.get_entry(habit_id, entry_date)
+        if not entry:
+            raise HTTPException(status_code=404, detail="Entry not found")
+        return entry
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail="Habit not found") from e
+
+@router.put("/habits/{habit_id}/entries/{entry_date}/journal", response_model=EntryOut)
+def update_entry_journal(
+    habit_id: int,
+    entry_date: date,
+    entry_update: EntryUpdate,
+    service: HabitService = Depends(get_habit_service),
+    current_user: int = Depends(get_current_user),
+):
+    """
+    Update the journal for a specific entry.
+    
+    Args:
+        habit_id: The ID of the habit
+        entry_date: The date of the entry (YYYY-MM-DD)
+        entry_update: The journal update data
+    """
+    try:
+        entry = service.update_entry_journal(habit_id, entry_date, entry_update.journal)
+        if not entry:
+            raise HTTPException(status_code=404, detail="Entry not found")
+        return entry
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail="Habit not found") from e
+
+@router.get("/habits/{habit_id}/entries", response_model=List[EntryOut])
+def list_entries(
+    habit_id: int,
+    service: HabitService = Depends(get_habit_service),
+    current_user: int = Depends(get_current_user),
+):
+    """
+    Get all entries for a habit, including journals, ordered by date (newest first).
+    
+    Args:
+        habit_id: The ID of the habit
+    """
+    try:
+        entries = service.list_entries(habit_id)
+        return entries
     except LookupError as e:
         raise HTTPException(status_code=404, detail="Habit not found") from e
