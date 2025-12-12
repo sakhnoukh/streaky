@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import JournalDialog from './JournalDialog'
 import './Calendar.css'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8002'
@@ -15,6 +16,7 @@ function Calendar({ habit, onClose }) {
   const [calendarData, setCalendarData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [selectedDate, setSelectedDate] = useState(null)
   const today = new Date()
   const [currentDate, setCurrentDate] = useState({
     year: today.getFullYear(),
@@ -63,6 +65,16 @@ function Calendar({ habit, onClose }) {
       year: today.getFullYear(),
       month: today.getMonth() + 1
     })
+  }
+
+  const handleDayClick = (day) => {
+    if (day && day.dateStr) {
+      setSelectedDate(day.dateStr)
+    }
+  }
+
+  const handleJournalSave = () => {
+    fetchCalendarData() // Refresh calendar after saving journal
   }
 
   // Generate calendar grid
@@ -152,8 +164,9 @@ function Calendar({ habit, onClose }) {
                 {generateCalendarGrid().map((day, index) => (
                   <div
                     key={index}
-                    className={`calendar-day ${day.date ? '' : 'calendar-day-empty'} ${day.completed ? 'calendar-day-completed' : ''} ${isToday(day) ? 'calendar-day-today' : ''}`}
+                    className={`calendar-day ${day.date ? '' : 'calendar-day-empty'} ${day.completed ? 'calendar-day-completed' : ''} ${isToday(day) ? 'calendar-day-today' : ''} ${day.date ? 'calendar-day-clickable' : ''}`}
                     title={day.dateStr}
+                    onClick={() => handleDayClick(day)}
                   >
                     {day.date && (
                       <>
@@ -177,6 +190,15 @@ function Calendar({ habit, onClose }) {
               </div>
             </div>
           </>
+        )}
+
+        {selectedDate && (
+          <JournalDialog
+            habit={habit}
+            entryDate={selectedDate}
+            onClose={() => setSelectedDate(null)}
+            onSave={handleJournalSave}
+          />
         )}
       </div>
     </div>

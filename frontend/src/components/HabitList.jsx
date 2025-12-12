@@ -1,4 +1,4 @@
-function HabitList({ habits, onLogEntry, onEdit, onDelete, onViewCalendar }) {
+function HabitList({ habits, onLogEntry, onEdit, onDelete, onViewCalendar, onViewJournal }) {
   if (habits.length === 0) {
     return (
       <div className="empty-state">
@@ -73,6 +73,13 @@ function HabitList({ habits, onLogEntry, onEdit, onDelete, onViewCalendar }) {
                 title="View calendar"
               >
                 📅 Calendar
+              </button>
+              <button
+                onClick={() => onViewJournal(habit)}
+                className="journal-btn"
+                title="View journal entries"
+              >
+                📝 Journal
               </button>
               <button
                 onClick={() => onLogEntry(habit.id)}

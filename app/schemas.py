@@ -16,6 +16,7 @@ class HabitUpdate(BaseModel):
 
 class HabitLog(BaseModel):
     date: date
+    journal: Optional[str] = None
 
 
 class HabitOut(BaseModel):
@@ -47,3 +48,14 @@ class CalendarOut(BaseModel):
     year: int
     month: int
     days: List[CalendarDay]
+
+class EntryOut(BaseModel):
+    model_config = {"from_attributes": True}
+    
+    id: int
+    habit_id: int
+    date: date
+    journal: Optional[str] = None
+
+class EntryUpdate(BaseModel):
+    journal: Optional[str] = None

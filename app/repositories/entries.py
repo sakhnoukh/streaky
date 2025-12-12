@@ -1,5 +1,6 @@
 from collections.abc import Iterable
 from datetime import date
+from typing import Optional, List
 
 from sqlalchemy.orm import Session
 
@@ -20,8 +21,8 @@ class SqlAlchemyEntryRepository(EntryRepository):
             is not None
         )
 
-    def create(self, habit_id: int, d: date) -> Entry:
-        entry = Entry(habit_id=habit_id, date=d)
+    def create(self, habit_id: int, d: date, journal: Optional[str] = None) -> Entry:
+        entry = Entry(habit_id=habit_id, date=d, journal=journal)
         self.session.add(entry)
         self.session.commit()
         self.session.refresh(entry)
@@ -34,3 +35,26 @@ class SqlAlchemyEntryRepository(EntryRepository):
             Entry.date <= end
         ).all()
         return [entry.date for entry in entries]
+
+    def get_by_date(self, habit_id: int, d: date) -> Optional[Entry]:
+        return (
+            self.session.query(Entry)
+            .filter(Entry.habit_id == habit_id, Entry.date == d)
+            .first()
+        )
+
+    def update_journal(self, habit_id: int, d: date, journal: Optional[str]) -> Optional[Entry]:
+        entry = self.get_by_date(habit_id, d)
+        if entry:
+            entry.journal = journal
+            self.session.commit()
+            self.session.refresh(entry)
+        return entry
+
+    def list_by_habit(self, habit_id: int) -> List[Entry]:
+        return (
+            self.session.query(Entry)
+            .filter(Entry.habit_id == habit_id)
+            .order_by(Entry.date.desc())
+            .all()
+        )

@@ -22,11 +22,14 @@ class HabitService:
             raise ValueError("name_exists")
         return self.habits.create(user_id, name, goal)
 
-    def log_today(self, habit_id: int, today: date):
+    def log_today(self, habit_id: int, today: date, journal: Optional[str] = None):
         if not self.habits.get(habit_id):
             raise LookupError("not_found")
         if not self.entries.exists_on(habit_id, today):
-            self.entries.create(habit_id, today)
+            self.entries.create(habit_id, today, journal)
+        elif journal is not None:
+            # Update journal if entry already exists
+            self.entries.update_journal(habit_id, today, journal)
 
     def list_with_streaks(self, user_id: int, today: date):
         out = []
@@ -99,3 +102,21 @@ class HabitService:
             "month": month,
             "days": days
         }
+
+    def get_entry(self, habit_id: int, entry_date: date):
+        h = self.habits.get(habit_id)
+        if not h:
+            raise LookupError("not_found")
+        return self.entries.get_by_date(habit_id, entry_date)
+
+    def update_entry_journal(self, habit_id: int, entry_date: date, journal: Optional[str]):
+        h = self.habits.get(habit_id)
+        if not h:
+            raise LookupError("not_found")
+        return self.entries.update_journal(habit_id, entry_date, journal)
+
+    def list_entries(self, habit_id: int):
+        h = self.habits.get(habit_id)
+        if not h:
+            raise LookupError("not_found")
+        return self.entries.list_by_habit(habit_id)

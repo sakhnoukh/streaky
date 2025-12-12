@@ -1,6 +1,7 @@
 from datetime import date as date_type
+from typing import Optional
 
-from sqlalchemy import Column, Date, ForeignKey, Integer, String
+from sqlalchemy import Column, Date, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .db import Base
@@ -26,5 +27,6 @@ class Entry(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     habit_id: Mapped[int] = mapped_column(Integer, ForeignKey("habits.id"))
     date: Mapped[date_type] = mapped_column(Date)
+    journal: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     habit = relationship("Habit", back_populates="entries")

@@ -6,6 +6,8 @@ import AddHabit from './components/AddHabit'
 import EditHabit from './components/EditHabit'
 import ConfirmDialog from './components/ConfirmDialog'
 import Calendar from './components/Calendar'
+import JournalDialog from './components/JournalDialog'
+import JournalEntries from './components/JournalEntries'
 import Toast from './components/Toast'
 import TodaySummary from './components/TodaySummary'
 import './App.css'
@@ -22,6 +24,8 @@ function App() {
   const [editingHabit, setEditingHabit] = useState(null)
   const [deletingHabit, setDeletingHabit] = useState(null)
   const [viewingCalendar, setViewingCalendar] = useState(null)
+  const [viewingJournal, setViewingJournal] = useState(null)
+  const [journalingEntry, setJournalingEntry] = useState(null)
 
   // Configure axios defaults
   useEffect(() => {
@@ -169,15 +173,20 @@ function App() {
     try {
       setError(null)
       const today = new Date().toISOString().split('T')[0]
-      await axios.post(`${API_URL}/habits/${habitId}/entries`, {
-        date: today
-      })
-      await fetchHabits()
-      showToast('Entry logged! 🔥', 'success')
+      const habit = habits.find(h => h.id === habitId)
+      if (habit) {
+        // Open journal dialog for today's entry
+        setJournalingEntry({ habit, date: today })
+      }
     } catch (err) {
       showToast('Failed to log entry', 'error')
       console.error('Log entry error:', err)
     }
+  }
+
+  const handleJournalSave = async () => {
+    await fetchHabits()
+    showToast('Entry logged! 🔥', 'success')
   }
 
   if (!token) {
@@ -206,6 +215,7 @@ function App() {
             onEdit={setEditingHabit}
             onDelete={setDeletingHabit}
             onViewCalendar={setViewingCalendar}
+            onViewJournal={setViewingJournal}
           />
         )}
       </main>
@@ -244,6 +254,25 @@ function App() {
             setViewingCalendar(null)
             fetchHabits() // Refresh habits to update any changes
           }}
+        />
+      )}
+
+      {viewingJournal && (
+        <JournalEntries
+          habit={viewingJournal}
+          onClose={() => {
+            setViewingJournal(null)
+            fetchHabits() // Refresh habits to update any changes
+          }}
+        />
+      )}
+
+      {journalingEntry && (
+        <JournalDialog
+          habit={journalingEntry.habit}
+          entryDate={journalingEntry.date}
+          onClose={() => setJournalingEntry(null)}
+          onSave={handleJournalSave}
         />
       )}
     </div>
