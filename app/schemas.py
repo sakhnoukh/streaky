@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, time
 from typing import Optional, List
 
 from pydantic import BaseModel
@@ -7,11 +7,13 @@ from pydantic import BaseModel
 class HabitCreate(BaseModel):
     name: str
     goal_type: str
+    reminder_time: Optional[time] = None
 
 
 class HabitUpdate(BaseModel):
     name: Optional[str] = None
     goal_type: Optional[str] = None
+    reminder_time: Optional[time] = None
 
 
 class HabitLog(BaseModel):
@@ -25,6 +27,7 @@ class HabitOut(BaseModel):
     id: int
     name: str
     goal_type: str
+    reminder_time: Optional[time] = None
 
 class HabitWithStreak(BaseModel):
     id: int
@@ -32,6 +35,7 @@ class HabitWithStreak(BaseModel):
     goal_type: str
     streak: int
     best_streak: int
+    reminder_time: Optional[time] = None
 
 class StatsOut(BaseModel):
     habit_id: int

@@ -1,7 +1,7 @@
-from datetime import date as date_type
+from datetime import date as date_type, time as time_type
 from typing import Optional
 
-from sqlalchemy import Column, Date, ForeignKey, Integer, String, Text
+from sqlalchemy import Column, Date, ForeignKey, Integer, String, Text, Time
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .db import Base
@@ -19,6 +19,7 @@ class Habit(Base):
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
     name: Mapped[str] = mapped_column(String(255), index=True)  # Length required for SQL Server index
     goal_type: Mapped[str] = mapped_column(String(50))  # 'daily' or 'weekly'
+    reminder_time: Mapped[Optional[time_type]] = mapped_column(Time, nullable=True)  # Optional reminder time
 
     entries = relationship("Entry", back_populates="habit", cascade="all, delete-orphan")
 

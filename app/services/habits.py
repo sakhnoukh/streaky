@@ -1,5 +1,5 @@
-from datetime import date, timedelta
-from typing import Literal, Optional
+from datetime import date, timedelta, time
+from typing import Literal, Optional, Union
 from calendar import monthrange
 
 from app.policies.goal import DailyPolicy, GoalPolicy, WeeklyPolicy
@@ -8,19 +8,18 @@ from app.utils.streak import best_streak, current_streak
 
 Goal = Literal["daily", "weekly"]
 
-
-def _policy(goal: Goal) -> GoalPolicy:
-    return DailyPolicy() if goal == "daily" else WeeklyPolicy()
+# Sentinel value to detect if reminder_time was explicitly provided
+_REMINDER_TIME_SENTINEL = object()
 
 
 class HabitService:
     def __init__(self, habits: HabitRepository, entries: EntryRepository):
         self.habits, self.entries = habits, entries
 
-    def create(self, user_id: int, name: str, goal: Goal = "daily"):
+    def create(self, user_id: int, name: str, goal: Goal = "daily", reminder_time: Optional[time] = None):
         if self.habits.exists_name(user_id, name):
             raise ValueError("name_exists")
-        return self.habits.create(user_id, name, goal)
+        return self.habits.create(user_id, name, goal, reminder_time)
 
     def log_today(self, habit_id: int, today: date, journal: Optional[str] = None):
         if not self.habits.get(habit_id):
@@ -39,13 +38,21 @@ class HabitService:
             dates = set(self.entries.dates_between(h.id, start, today))
             out.append({"id": h.id, "name": h.name, "goal_type": h.goal_type,
                         "streak": current_streak(dates, today),
-                        "best_streak": best_streak(dates)})
+                        "best_streak": best_streak(dates),
+                        "reminder_time": h.reminder_time})
         return out
 
-    def update(self, habit_id: int, name: Optional[str], goal_type: Optional[str]):
+    def update(self, habit_id: int, name: Optional[str], goal_type: Optional[str], reminder_time: Union[Optional[time], object] = _REMINDER_TIME_SENTINEL):
         if not self.habits.get(habit_id):
             raise LookupError("not_found")
-        return self.habits.update(habit_id, name, goal_type)
+        # Pass reminder_time to repository only if it was explicitly provided
+        # The repository uses a sentinel to detect if it should update reminder_time
+        if reminder_time is not _REMINDER_TIME_SENTINEL:
+            return self.habits.update(habit_id, name, goal_type, reminder_time)
+        else:
+            # reminder_time was not provided, pass sentinel to repository
+            from app.repositories.base import _REMINDER_TIME_NOT_PROVIDED
+            return self.habits.update(habit_id, name, goal_type, _REMINDER_TIME_NOT_PROVIDED)
 
     def delete(self, habit_id: int):
         if not self.habits.get(habit_id):

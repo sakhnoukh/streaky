@@ -40,6 +40,12 @@ function HabitList({ habits, onLogEntry, onEdit, onDelete, onViewCalendar, onVie
             
             <span className="goal-badge">{habit.goal_type}</span>
             
+            {habit.reminder_time && (
+              <div className="reminder-badge" title={`Reminder set for ${habit.reminder_time}`}>
+                ⏰ {habit.reminder_time}
+              </div>
+            )}
+            
             <div className="habit-stats">
               <div className="stat-item">
                 <span className="stat-icon">🔥</span>
