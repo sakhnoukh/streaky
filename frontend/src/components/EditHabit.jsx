@@ -4,10 +4,11 @@ import './EditHabit.css'
 function EditHabit({ habit, onUpdate, onCancel }) {
   const [name, setName] = useState(habit.name)
   const [goalType, setGoalType] = useState(habit.goal_type)
+  const [reminderTime, setReminderTime] = useState(habit.reminder_time || '')
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    onUpdate(habit.id, name, goalType)
+    onUpdate(habit.id, name, goalType, reminderTime || null)
   }
 
   return (
@@ -37,6 +38,19 @@ function EditHabit({ habit, onUpdate, onCancel }) {
               <option value="daily">Daily</option>
               <option value="weekly">Weekly</option>
             </select>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="edit-reminder-time">Reminder Time (Optional)</label>
+            <input
+              type="time"
+              id="edit-reminder-time"
+              value={reminderTime}
+              onChange={(e) => setReminderTime(e.target.value)}
+            />
+            <small style={{ display: 'block', marginTop: '4px', color: '#666', fontSize: '0.85em' }}>
+              Leave empty to remove reminder
+            </small>
           </div>
 
           <div className="edit-actions">

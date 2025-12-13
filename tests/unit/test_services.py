@@ -1,9 +1,10 @@
 """Unit tests for HabitService with fake repositories."""
-from datetime import date, timedelta
-from typing import Iterable, Optional, List
+from datetime import date, timedelta, time
+from typing import Iterable, Optional, List, Union
 import pytest
 from app.services.habits import HabitService
 from app.models import Habit, Entry
+from app.repositories.base import _REMINDER_TIME_NOT_PROVIDED
 
 
 class FakeHabitRepository:
@@ -13,8 +14,8 @@ class FakeHabitRepository:
         self.habits = {}
         self.next_id = 1
 
-    def create(self, user_id: int, name: str, goal_type: str) -> Habit:
-        habit = Habit(id=self.next_id, user_id=user_id, name=name, goal_type=goal_type)
+    def create(self, user_id: int, name: str, goal_type: str, reminder_time: Optional[time] = None) -> Habit:
+        habit = Habit(id=self.next_id, user_id=user_id, name=name, goal_type=goal_type, reminder_time=reminder_time)
         self.habits[self.next_id] = habit
         self.next_id += 1
         return habit
@@ -27,6 +28,24 @@ class FakeHabitRepository:
 
     def exists_name(self, user_id: int, name: str) -> bool:
         return any(h.name == name and h.user_id == user_id for h in self.habits.values())
+
+    def update(self, habit_id: int, name: Optional[str], goal_type: Optional[str], reminder_time: Union[Optional[time], object] = _REMINDER_TIME_NOT_PROVIDED) -> Optional[Habit]:
+        habit = self.habits.get(habit_id)
+        if not habit:
+            return None
+        if name is not None:
+            habit.name = name
+        if goal_type is not None:
+            habit.goal_type = goal_type
+        if reminder_time is not _REMINDER_TIME_NOT_PROVIDED:
+            habit.reminder_time = reminder_time  # type: ignore
+        return habit
+
+    def delete(self, habit_id: int) -> bool:
+        if habit_id in self.habits:
+            del self.habits[habit_id]
+            return True
+        return False
 
 
 class FakeEntryRepository:

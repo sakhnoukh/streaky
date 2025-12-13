@@ -123,13 +123,17 @@ function App() {
     }
   }
 
-  const handleAddHabit = async (name, goalType) => {
+  const handleAddHabit = async (name, goalType, reminderTime) => {
     try {
       setError(null)
-      await axios.post(`${API_URL}/habits`, {
+      const payload = {
         name,
         goal_type: goalType
-      })
+      }
+      if (reminderTime) {
+        payload.reminder_time = reminderTime
+      }
+      await axios.post(`${API_URL}/habits`, payload)
       await fetchHabits()
       showToast('Habit created successfully! 🎉', 'success')
     } catch (err) {
@@ -142,12 +146,16 @@ function App() {
     }
   }
 
-  const handleUpdateHabit = async (habitId, name, goalType) => {
+  const handleUpdateHabit = async (habitId, name, goalType, reminderTime) => {
     try {
-      await axios.put(`${API_URL}/habits/${habitId}`, {
+      const payload = {
         name,
         goal_type: goalType
-      })
+      }
+      if (reminderTime !== undefined) {
+        payload.reminder_time = reminderTime
+      }
+      await axios.put(`${API_URL}/habits/${habitId}`, payload)
       await fetchHabits()
       setEditingHabit(null)
       showToast('Habit updated successfully! ✓', 'success')

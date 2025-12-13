@@ -38,7 +38,7 @@ def create_habit(
                 status_code=400,
                 detail="Invalid goal_type. Must be 'daily' or 'weekly'",
             )
-        created_habit = service.create(current_user, habit.name, habit.goal_type)  # type: ignore
+        created_habit = service.create(current_user, habit.name, habit.goal_type, habit.reminder_time)  # type: ignore
         return created_habit
     except ValueError as e:
         if str(e) == "name_exists":
@@ -94,7 +94,16 @@ def update_habit(
                 status_code=400,
                 detail="Invalid goal_type. Must be 'daily' or 'weekly'",
             )
-        updated_habit = service.update(habit_id, habit.name, habit.goal_type)
+        # Use model_dump(exclude_unset=True) to only get fields that were explicitly set
+        habit_dict = habit.model_dump(exclude_unset=True)
+        # Only pass reminder_time if it was explicitly in the request
+        if 'reminder_time' in habit_dict:
+            reminder_time = habit_dict['reminder_time']
+        else:
+            # Use a sentinel to indicate reminder_time was not provided
+            from app.services.habits import _REMINDER_TIME_SENTINEL
+            reminder_time = _REMINDER_TIME_SENTINEL
+        updated_habit = service.update(habit_id, habit_dict.get('name'), habit_dict.get('goal_type'), reminder_time)
         if not updated_habit:
             raise HTTPException(status_code=404, detail="Habit not found")
         return updated_habit
