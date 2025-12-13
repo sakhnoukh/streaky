@@ -25,6 +25,7 @@ class SqlAlchemyHabitRepository(HabitRepository):
         return self.session.query(Habit).filter(Habit.user_id == user_id).all()
 
     def exists_name(self, user_id: int, name: str) -> bool:
+        """Check if a habit with the given name already exists for the user."""
         return (
             self.session.query(Habit)
             .filter(Habit.user_id == user_id, Habit.name == name)

@@ -4,21 +4,13 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.db import SessionLocal
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, get_db
 from app.repositories.entries import SqlAlchemyEntryRepository
 from app.repositories.habits import SqlAlchemyHabitRepository
 from app.schemas import HabitCreate, HabitUpdate, HabitLog, HabitOut, HabitWithStreak, StatsOut, CalendarOut, EntryOut, EntryUpdate
 from app.services.habits import HabitService
 
 router = APIRouter()
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 def get_habit_service(db: Session = Depends(get_db)) -> HabitService:
     habits_repo = SqlAlchemyHabitRepository(db)
@@ -62,7 +54,7 @@ def log_entry(
     current_user: int = Depends(get_current_user),
 ):
     try:
-        service.log_today(habit_id, entry.date, entry.journal)
+        service.log_today(habit_id, current_user, entry.date, entry.journal)
         return {"ok": True}
     except LookupError as e:
         raise HTTPException(status_code=404, detail="Habit not found") from e
@@ -74,9 +66,11 @@ def get_stats(
     service: HabitService = Depends(get_habit_service),
     current_user: int = Depends(get_current_user),
 ):
+    if range not in ["7d", "30d"]:
+        raise HTTPException(status_code=400, detail="Range must be '7d' or '30d'")
     days = 7 if range == "7d" else 30
     try:
-        return service.stats(habit_id, days, date.today())
+        return service.stats(habit_id, current_user, days, date.today())
     except LookupError as e:
         raise HTTPException(status_code=404, detail="Habit not found") from e
 
@@ -103,7 +97,7 @@ def update_habit(
             # Use a sentinel to indicate reminder_time was not provided
             from app.services.habits import _REMINDER_TIME_SENTINEL
             reminder_time = _REMINDER_TIME_SENTINEL
-        updated_habit = service.update(habit_id, habit_dict.get('name'), habit_dict.get('goal_type'), reminder_time)
+        updated_habit = service.update(habit_id, current_user, habit_dict.get('name'), habit_dict.get('goal_type'), reminder_time)
         if not updated_habit:
             raise HTTPException(status_code=404, detail="Habit not found")
         return updated_habit
@@ -117,7 +111,7 @@ def delete_habit(
     current_user: int = Depends(get_current_user),
 ):
     try:
-        service.delete(habit_id)
+        service.delete(habit_id, current_user)
         return {"ok": True}
     except LookupError as e:
         raise HTTPException(status_code=404, detail="Habit not found") from e
@@ -161,7 +155,7 @@ def get_entry(
         entry_date: The date of the entry (YYYY-MM-DD)
     """
     try:
-        entry = service.get_entry(habit_id, entry_date)
+        entry = service.get_entry(habit_id, current_user, entry_date)
         if not entry:
             raise HTTPException(status_code=404, detail="Entry not found")
         return entry
@@ -185,7 +179,7 @@ def update_entry_journal(
         entry_update: The journal update data
     """
     try:
-        entry = service.update_entry_journal(habit_id, entry_date, entry_update.journal)
+        entry = service.update_entry_journal(habit_id, current_user, entry_date, entry_update.journal)
         if not entry:
             raise HTTPException(status_code=404, detail="Entry not found")
         return entry
@@ -205,7 +199,7 @@ def list_entries(
         habit_id: The ID of the habit
     """
     try:
-        entries = service.list_entries(habit_id)
+        entries = service.list_entries(habit_id, current_user)
         return entries
     except LookupError as e:
         raise HTTPException(status_code=404, detail="Habit not found") from e

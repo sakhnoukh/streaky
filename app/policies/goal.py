@@ -15,5 +15,6 @@ class WeeklyPolicy:
         return today - timedelta(days=days - 1), today
 
     def is_hit(self, dates: Set[date], d: date):
-        # MVP placeholder: any day of week counts
-        return d.isoweekday() in {1, 2, 3, 4, 5, 6, 7} and d in dates
+        # For weekly goals, check if the date has an entry
+        # Future: could implement week-based logic (e.g., at least one entry per week)
+        return d in dates
