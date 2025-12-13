@@ -12,6 +12,11 @@ Goal = Literal["daily", "weekly"]
 _REMINDER_TIME_SENTINEL = object()
 
 
+def _policy(goal: Goal) -> GoalPolicy:
+    """Get the appropriate policy for a goal type."""
+    return DailyPolicy() if goal == "daily" else WeeklyPolicy()
+
+
 class HabitService:
     def __init__(self, habits: HabitRepository, entries: EntryRepository):
         self.habits, self.entries = habits, entries
@@ -21,8 +26,12 @@ class HabitService:
             raise ValueError("name_exists")
         return self.habits.create(user_id, name, goal, reminder_time)
 
-    def log_today(self, habit_id: int, today: date, journal: Optional[str] = None):
-        if not self.habits.get(habit_id):
+    def log_today(self, habit_id: int, user_id: int, today: date, journal: Optional[str] = None):
+        h = self.habits.get(habit_id)
+        if not h:
+            raise LookupError("not_found")
+        # Validate that the habit belongs to the user
+        if h.user_id != user_id:
             raise LookupError("not_found")
         if not self.entries.exists_on(habit_id, today):
             self.entries.create(habit_id, today, journal)
@@ -42,8 +51,12 @@ class HabitService:
                         "reminder_time": h.reminder_time})
         return out
 
-    def update(self, habit_id: int, name: Optional[str], goal_type: Optional[str], reminder_time: Union[Optional[time], object] = _REMINDER_TIME_SENTINEL):
-        if not self.habits.get(habit_id):
+    def update(self, habit_id: int, user_id: int, name: Optional[str], goal_type: Optional[str], reminder_time: Union[Optional[time], object] = _REMINDER_TIME_SENTINEL):
+        h = self.habits.get(habit_id)
+        if not h:
+            raise LookupError("not_found")
+        # Validate that the habit belongs to the user
+        if h.user_id != user_id:
             raise LookupError("not_found")
         # Pass reminder_time to repository only if it was explicitly provided
         # The repository uses a sentinel to detect if it should update reminder_time
@@ -54,16 +67,23 @@ class HabitService:
             from app.repositories.base import _REMINDER_TIME_NOT_PROVIDED
             return self.habits.update(habit_id, name, goal_type, _REMINDER_TIME_NOT_PROVIDED)
 
-    def delete(self, habit_id: int):
-        if not self.habits.get(habit_id):
-            raise LookupError("not_found")
-        return self.habits.delete(habit_id)
-
-    def stats(self, habit_id: int, days: int, today: date):
+    def delete(self, habit_id: int, user_id: int):
         h = self.habits.get(habit_id)
         if not h:
             raise LookupError("not_found")
-        pol = _policy(h.goal_type)  # type: ignore[arg-type]
+        # Validate that the habit belongs to the user
+        if h.user_id != user_id:
+            raise LookupError("not_found")
+        return self.habits.delete(habit_id)
+
+    def stats(self, habit_id: int, user_id: int, days: int, today: date):
+        h = self.habits.get(habit_id)
+        if not h:
+            raise LookupError("not_found")
+        # Validate that the habit belongs to the user
+        if h.user_id != user_id:
+            raise LookupError("not_found")
+        pol = _policy(h.goal_type)
         start, end = pol.window(days, today)
         ds = set(self.entries.dates_between(h.id, start, end))
         return {
@@ -91,7 +111,7 @@ class HabitService:
         entry_dates = set(self.entries.dates_between(h.id, first_day, last_day))
         
         # Get policy for checking completion
-        pol = _policy(h.goal_type)  # type: ignore[arg-type]
+        pol = _policy(h.goal_type)
         
         # Generate all days in the month
         days = []
@@ -110,20 +130,29 @@ class HabitService:
             "days": days
         }
 
-    def get_entry(self, habit_id: int, entry_date: date):
+    def get_entry(self, habit_id: int, user_id: int, entry_date: date):
         h = self.habits.get(habit_id)
         if not h:
+            raise LookupError("not_found")
+        # Validate that the habit belongs to the user
+        if h.user_id != user_id:
             raise LookupError("not_found")
         return self.entries.get_by_date(habit_id, entry_date)
 
-    def update_entry_journal(self, habit_id: int, entry_date: date, journal: Optional[str]):
+    def update_entry_journal(self, habit_id: int, user_id: int, entry_date: date, journal: Optional[str]):
         h = self.habits.get(habit_id)
         if not h:
             raise LookupError("not_found")
+        # Validate that the habit belongs to the user
+        if h.user_id != user_id:
+            raise LookupError("not_found")
         return self.entries.update_journal(habit_id, entry_date, journal)
 
-    def list_entries(self, habit_id: int):
+    def list_entries(self, habit_id: int, user_id: int):
         h = self.habits.get(habit_id)
         if not h:
+            raise LookupError("not_found")
+        # Validate that the habit belongs to the user
+        if h.user_id != user_id:
             raise LookupError("not_found")
         return self.entries.list_by_habit(habit_id)

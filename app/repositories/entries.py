@@ -29,12 +29,13 @@ class SqlAlchemyEntryRepository(EntryRepository):
         return entry
 
     def dates_between(self, habit_id: int, start: date, end: date) -> Iterable[date]:
+        """Get all entry dates for a habit within a date range."""
         entries = self.session.query(Entry.date).filter(
             Entry.habit_id == habit_id,
             Entry.date >= start,
             Entry.date <= end
         ).all()
-        return [entry.date for entry in entries]
+        return (entry.date for entry in entries)  # Return generator for better memory efficiency
 
     def get_by_date(self, habit_id: int, d: date) -> Optional[Entry]:
         return (
