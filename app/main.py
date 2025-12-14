@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.types import ASGIApp
 
 from app.config import settings
 from app.db import create_tables
@@ -34,7 +35,24 @@ import logging
 logger = logging.getLogger(__name__)
 logger.info(f"CORS allowed origins: {settings.cors_origins}")
 
-# CORS middleware must be added first to handle preflight requests
+# Custom middleware to ensure CORS headers on all responses (including errors)
+class CORSHeaderMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        origin = request.headers.get("origin")
+        response = await call_next(request)
+        
+        # Add CORS headers if origin is allowed
+        if origin and origin in settings.cors_origins:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers["Access-Control-Expose-Headers"] = "*"
+        
+        return response
+
+# Add CORS header middleware first (before CORS middleware)
+app.add_middleware(CORSHeaderMiddleware)
+
+# CORS middleware must be added to handle preflight requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -50,7 +68,7 @@ app.add_middleware(
 async def options_handler(request: Request, full_path: str):
     """Handle OPTIONS requests explicitly to ensure CORS headers are always present"""
     origin = request.headers.get("origin")
-    if origin in settings.cors_origins:
+    if origin and origin in settings.cors_origins:
         return Response(
             status_code=200,
             headers={
