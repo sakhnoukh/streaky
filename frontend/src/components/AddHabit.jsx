@@ -20,7 +20,7 @@ function AddHabit({ onAdd }) {
   if (!isOpen) {
     return (
       <button onClick={() => setIsOpen(true)} className="add-habit-toggle">
-        + Add New Habit
+        Add New Habit
       </button>
     )
   }

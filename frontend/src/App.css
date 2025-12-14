@@ -227,10 +227,6 @@
   letter-spacing: -0.02em;
 }
 
-.App-header h1::before {
-  content: '🎯';
-  font-size: 1.3rem;
-}
 
 .header-actions {
   display: flex;

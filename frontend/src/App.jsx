@@ -356,7 +356,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>🎯 Streaky</h1>
+        <h1>Streaky</h1>
         <div className="header-actions">
           <button onClick={() => setShowCategoryManager(true)} className="manage-categories-btn">
             📁 Categories

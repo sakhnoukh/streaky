@@ -23,7 +23,7 @@ function Login({ onLogin, onRegister, error }) {
   return (
     <div className="login-container">
       <div className="login-card">
-        <h1>🎯 Streaky</h1>
+        <h1>Streaky</h1>
         <h2>Habit Tracker</h2>
         <p className="login-subtitle">Track your habits, build your streaks</p>
 
