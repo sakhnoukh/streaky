@@ -304,18 +304,24 @@ pre-commit run --all-files
 ### Database Migrations
 
 ```bash
-# Create a new migration
-.env/bin/python -m alembic revision --autogenerate -m "description"
+# Check migration status
+python -m alembic current
+python scripts/check-migration-status.py
 
-# Apply migrations
-.env/bin/python -m alembic upgrade head
+# Apply all pending migrations (IMPORTANT: Run this after code changes!)
+python -m alembic upgrade head
+
+# Create a new migration
+python -m alembic revision --autogenerate -m "description"
 
 # Rollback one migration
-.env/bin/python -m alembic downgrade -1
+python -m alembic downgrade -1
 
 # View migration history
-.env/bin/python -m alembic history
+python -m alembic history
 ```
+
+**⚠️ Important:** After pulling code changes that modify models, always run `python -m alembic upgrade head` to apply database migrations.
 
 ## Project Structure
 
