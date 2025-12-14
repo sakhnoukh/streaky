@@ -1,5 +1,5 @@
 from datetime import date, time
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 
 from pydantic import BaseModel
 
@@ -41,7 +41,7 @@ class StatsOut(BaseModel):
     habit_id: int
     current_streak: int
     best_streak: int
-    days: List[dict]
+    days: List[Dict[str, Any]]
 
 class CalendarDay(BaseModel):
     date: str
