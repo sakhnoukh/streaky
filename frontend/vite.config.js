@@ -3,6 +3,12 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  build: {
+    // Use esbuild (default) which doesn't use eval and is CSP-safe
+    minify: 'esbuild',
+    // Disable source maps in production to reduce bundle size
+    sourcemap: false,
+  },
   server: {
     port: 5000,
     proxy: {

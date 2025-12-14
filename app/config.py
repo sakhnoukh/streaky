@@ -44,7 +44,12 @@ class Settings(BaseSettings):
     @property
     def cors_origins(self) -> list:
         """Parse CORS origins from comma-separated string"""
-        return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",")]
+        origins = [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",")]
+        # Always include the Azure frontend URL if not already present
+        azure_frontend = "https://streakyfelix.z6.web.core.windows.net"
+        if azure_frontend not in origins:
+            origins.append(azure_frontend)
+        return origins
     
     @property
     def is_production(self) -> bool:
