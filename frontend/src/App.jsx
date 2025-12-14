@@ -6,6 +6,8 @@ import AddHabit from './components/AddHabit'
 import EditHabit from './components/EditHabit'
 import ConfirmDialog from './components/ConfirmDialog'
 import Calendar from './components/Calendar'
+import JournalDialog from './components/JournalDialog'
+import JournalEntries from './components/JournalEntries'
 import Toast from './components/Toast'
 import TodaySummary from './components/TodaySummary'
 import CategoryManager from './components/CategoryManager'
@@ -13,8 +15,8 @@ import CategoryFilter from './components/CategoryFilter'
 import HabitCategoryAssign from './components/HabitCategoryAssign'
 import './App.css'
 
-// Use environment variable for API URL, fallback to localhost
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8002'
+// Use environment variable for API URL, fallback to proxy or localhost
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? '/api' : 'http://localhost:8002')
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token'))
@@ -29,15 +31,42 @@ function App() {
   const [showCategoryManager, setShowCategoryManager] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState(null)
   const [assigningCategories, setAssigningCategories] = useState(null)
+  const [viewingJournal, setViewingJournal] = useState(null)
+  const [journalingEntry, setJournalingEntry] = useState(null)
 
   // Configure axios defaults
   useEffect(() => {
+    console.log('API URL:', API_URL)
+    console.log('Current token exists:', !!token)
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      console.log('Authorization header set:', axios.defaults.headers.common['Authorization']?.substring(0, 50) + '...')
     } else {
       delete axios.defaults.headers.common['Authorization']
+      console.log('Authorization header removed - user not logged in')
     }
   }, [token])
+  
+  // Add axios interceptor to handle 401 errors globally
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          console.log('401 Unauthorized - logging out')
+          // Clear token and redirect to login
+          setToken(null)
+          localStorage.removeItem('token')
+          setHabits([])
+          setToast({ message: 'Session expired. Please log in again.', type: 'error' })
+        }
+        return Promise.reject(error)
+      }
+    )
+    return () => {
+      axios.interceptors.response.eject(interceptor)
+    }
+  }, [])
 
   // Fetch habits and categories when logged in
   useEffect(() => {
@@ -228,31 +257,57 @@ function App() {
     }
   }
 
-  const handleAddHabit = async (name, goalType) => {
+  const handleAddHabit = async (name, goalType, reminderTime) => {
     try {
       setError(null)
-      await axios.post(`${API_URL}/habits`, {
+      const payload = {
         name,
         goal_type: goalType
-      })
+      }
+      if (reminderTime) {
+        payload.reminder_time = reminderTime
+      }
+      console.log('Creating habit with payload:', payload)
+      console.log('Authorization header:', axios.defaults.headers.common['Authorization'])
+      const response = await axios.post(`${API_URL}/habits`, payload)
+      console.log('Habit created successfully:', response.data)
       await fetchHabits()
       showToast('Habit created successfully! 🎉', 'success')
     } catch (err) {
-      if (err.response?.status === 409) {
-        showToast('Habit name already exists', 'error')
-      } else {
-        showToast('Failed to create habit', 'error')
-      }
       console.error('Create habit error:', err)
+      console.error('Error response:', err.response?.data)
+      console.error('Error code:', err.code)
+      console.error('Error message:', err.message)
+      console.error('API URL used:', API_URL)
+      
+      if (err.code === 'ERR_NETWORK' || err.message?.includes('Network Error')) {
+        showToast(`Network error: Cannot connect to ${API_URL}. Please check your connection.`, 'error')
+        setError(`Cannot connect to server. API URL: ${API_URL}`)
+      } else if (err.response?.status === 401) {
+        showToast('Session expired. Please log in again.', 'error')
+        handleLogout()
+      } else if (err.response?.status === 409) {
+        showToast('Habit name already exists', 'error')
+      } else if (err.response?.status === 403) {
+        showToast('CORS error: Request blocked. Please contact support.', 'error')
+      } else {
+        const errorMsg = err.response?.data?.detail || err.message || 'Unknown error'
+        showToast(`Failed to create habit: ${errorMsg}`, 'error')
+        setError(`Error: ${errorMsg}`)
+      }
     }
   }
 
-  const handleUpdateHabit = async (habitId, name, goalType) => {
+  const handleUpdateHabit = async (habitId, name, goalType, reminderTime) => {
     try {
-      await axios.put(`${API_URL}/habits/${habitId}`, {
+      const payload = {
         name,
         goal_type: goalType
-      })
+      }
+      if (reminderTime !== undefined) {
+        payload.reminder_time = reminderTime
+      }
+      await axios.put(`${API_URL}/habits/${habitId}`, payload)
       await fetchHabits()
       setEditingHabit(null)
       showToast('Habit updated successfully! ✓', 'success')
@@ -278,15 +333,20 @@ function App() {
     try {
       setError(null)
       const today = new Date().toISOString().split('T')[0]
-      await axios.post(`${API_URL}/habits/${habitId}/entries`, {
-        date: today
-      })
-      await fetchHabits()
-      showToast('Entry logged! 🔥', 'success')
+      const habit = habits.find(h => h.id === habitId)
+      if (habit) {
+        // Open journal dialog for today's entry
+        setJournalingEntry({ habit, date: today })
+      }
     } catch (err) {
       showToast('Failed to log entry', 'error')
       console.error('Log entry error:', err)
     }
+  }
+
+  const handleJournalSave = async () => {
+    await fetchHabits()
+    showToast('Entry logged! 🔥', 'success')
   }
 
   if (!token) {
@@ -330,6 +390,7 @@ function App() {
             onDelete={setDeletingHabit}
             onViewCalendar={setViewingCalendar}
             onManageCategories={setAssigningCategories}
+            onViewJournal={setViewingJournal}
           />
         )}
       </main>
@@ -388,6 +449,25 @@ function App() {
           onAddCategory={handleAddHabitToCategory}
           onRemoveCategory={handleRemoveHabitFromCategory}
           onClose={() => setAssigningCategories(null)}
+        />
+      )}
+
+      {viewingJournal && (
+        <JournalEntries
+          habit={viewingJournal}
+          onClose={() => {
+            setViewingJournal(null)
+            fetchHabits() // Refresh habits to update any changes
+          }}
+        />
+      )}
+
+      {journalingEntry && (
+        <JournalDialog
+          habit={journalingEntry.habit}
+          entryDate={journalingEntry.date}
+          onClose={() => setJournalingEntry(null)}
+          onSave={handleJournalSave}
         />
       )}
     </div>

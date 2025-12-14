@@ -3,14 +3,16 @@ import { useState } from 'react'
 function AddHabit({ onAdd }) {
   const [name, setName] = useState('')
   const [goalType, setGoalType] = useState('daily')
+  const [reminderTime, setReminderTime] = useState('')
   const [isOpen, setIsOpen] = useState(false)
 
   const handleSubmit = (e) => {
     e.preventDefault()
     if (name.trim()) {
-      onAdd(name, goalType)
+      onAdd(name, goalType, reminderTime || null)
       setName('')
       setGoalType('daily')
+      setReminderTime('')
       setIsOpen(false)
     }
   }
@@ -50,6 +52,20 @@ function AddHabit({ onAdd }) {
             <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>
           </select>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="reminder-time">Reminder Time (Optional)</label>
+          <input
+            type="time"
+            id="reminder-time"
+            value={reminderTime}
+            onChange={(e) => setReminderTime(e.target.value)}
+            placeholder="Set a reminder"
+          />
+          <small style={{ display: 'block', marginTop: '4px', color: '#666', fontSize: '0.85em' }}>
+            Get notified at this time each day
+          </small>
         </div>
 
         <div className="form-actions">

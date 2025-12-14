@@ -304,18 +304,24 @@ pre-commit run --all-files
 ### Database Migrations
 
 ```bash
-# Create a new migration
-.env/bin/python -m alembic revision --autogenerate -m "description"
+# Check migration status
+python -m alembic current
+python scripts/check-migration-status.py
 
-# Apply migrations
-.env/bin/python -m alembic upgrade head
+# Apply all pending migrations (IMPORTANT: Run this after code changes!)
+python -m alembic upgrade head
+
+# Create a new migration
+python -m alembic revision --autogenerate -m "description"
 
 # Rollback one migration
-.env/bin/python -m alembic downgrade -1
+python -m alembic downgrade -1
 
 # View migration history
-.env/bin/python -m alembic history
+python -m alembic history
 ```
+
+**⚠️ Important:** After pulling code changes that modify models, always run `python -m alembic upgrade head` to apply database migrations.
 
 ## Project Structure
 
@@ -426,7 +432,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow and guidelines.
 |----------|------|----------|
 | `streaky-api` | App Service | Canada Central |
 | `streaky-sql-server/streaky-db` | SQL Database | East US |
-| `Streaky-insights` | Application Insights | West Europe |
 | `BCSAI2025-DEVOPS-STUDENT-1B` | Resource Group | - |
 
 ### CI/CD Pipeline
@@ -438,9 +443,17 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow and guidelines.
 ### Monitoring
 
 See [docs/MONITORING.md](docs/MONITORING.md) for:
-- Application Insights dashboard setup
-- KQL queries for uptime, response time, error rate
+- Prometheus metrics collection
+- Grafana dashboard setup
+- PromQL queries for metrics
 - Alert configuration
+
+**Quick Start with Docker Compose:**
+```bash
+docker-compose up -d
+# Access Grafana at http://localhost:3000 (admin/admin)
+# Access Prometheus at http://localhost:9090
+```
 
 ## License
 

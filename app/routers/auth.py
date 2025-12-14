@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.auth import get_password_hash, verify_password
 from app.config import settings
-from app.db import SessionLocal
+from app.dependencies import get_db
 from app.models import User
 
 router = APIRouter(tags=["authentication"])
@@ -21,13 +21,6 @@ class UserCreate(BaseModel):
 class UserResponse(BaseModel):
     id: int
     username: str
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 def create_access_token(data: dict):
     to_encode = data.copy()
@@ -41,6 +34,28 @@ def get_user_by_username(db: Session, username: str) -> Optional[User]:
 
 @router.post("/auth/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(user_data: UserCreate, db: Session = Depends(get_db)):
+    """Register a new user account."""
+    # Validate username length
+    if len(user_data.username.strip()) < 3:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username must be at least 3 characters long"
+        )
+    
+    # Validate password length
+    if len(user_data.password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 6 characters long"
+        )
+    # Bcrypt has a 72-byte limit, warn if password is too long
+    password_bytes = len(user_data.password.encode('utf-8'))
+    if password_bytes > 72:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password is too long. Maximum length is 72 bytes (approximately 72 characters for ASCII text)"
+        )
+    
     # Check if user already exists
     existing_user = get_user_by_username(db, user_data.username)
     if existing_user:
@@ -51,7 +66,7 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
     
     # Create new user
     hashed_password = get_password_hash(user_data.password)
-    new_user = User(username=user_data.username, hashed_password=hashed_password)
+    new_user = User(username=user_data.username.strip(), hashed_password=hashed_password)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
@@ -63,6 +78,10 @@ async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
+    """Authenticate user and return access token.
+    
+    Also upgrades legacy SHA256 passwords to bcrypt on successful login.
+    """
     # Get user from database
     user = get_user_by_username(db, form_data.username)
     if not user or not verify_password(form_data.password, user.hashed_password):
@@ -71,6 +90,14 @@ async def login_for_access_token(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
+    # Upgrade legacy SHA256 password to bcrypt if needed
+    # Check if password is legacy SHA256 (64 hex chars, no bcrypt markers)
+    if len(user.hashed_password) == 64 and all(c in '0123456789abcdef' for c in user.hashed_password):
+        # Legacy password verified successfully, upgrade to bcrypt
+        from app.auth import get_password_hash
+        user.hashed_password = get_password_hash(form_data.password)
+        db.commit()
     
     access_token = create_access_token(data={"sub": user.username, "user_id": user.id})
     return {"access_token": access_token, "token_type": "bearer"}

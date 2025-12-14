@@ -1,145 +1,209 @@
 """
-Application Insights integration for monitoring and telemetry
+Prometheus metrics integration for monitoring and telemetry
 """
 import time
 import logging
 from typing import Optional
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
+from prometheus_client import Counter, Histogram, Gauge, generate_latest
+CONTENT_TYPE_LATEST = 'text/plain; version=0.0.4; charset=utf-8'
 from app.config import settings
 
 # Setup logging
 logger = logging.getLogger(__name__)
 
-# Application Insights client (optional)
-telemetry_client = None
+# Prometheus metrics
+http_requests_total = Counter(
+    'http_requests_total',
+    'Total HTTP requests',
+    ['method', 'endpoint', 'status_code']
+)
 
-try:
-    if settings.APPINSIGHTS_INSTRUMENTATION_KEY or settings.APPINSIGHTS_CONNECTION_STRING:
-        from applicationinsights import TelemetryClient
-        from opencensus.ext.azure.log_exporter import AzureLogHandler
-        from opencensus.ext.azure import metrics_exporter
-        
-        # Initialize telemetry client
-        if settings.APPINSIGHTS_INSTRUMENTATION_KEY:
-            telemetry_client = TelemetryClient(settings.APPINSIGHTS_INSTRUMENTATION_KEY)
-        
-        # Configure Azure logging
-        if settings.APPINSIGHTS_CONNECTION_STRING:
-            azure_handler = AzureLogHandler(
-                connection_string=settings.APPINSIGHTS_CONNECTION_STRING
-            )
-            logger.addHandler(azure_handler)
-        
-        logger.info("Application Insights initialized successfully")
-except ImportError:
-    logger.warning("Application Insights packages not installed. Monitoring disabled.")
-except Exception as e:
-    logger.error(f"Failed to initialize Application Insights: {e}")
+http_request_duration_seconds = Histogram(
+    'http_request_duration_seconds',
+    'HTTP request duration in seconds',
+    ['method', 'endpoint']
+)
+
+http_request_size_bytes = Histogram(
+    'http_request_size_bytes',
+    'HTTP request size in bytes',
+    ['method', 'endpoint']
+)
+
+http_response_size_bytes = Histogram(
+    'http_response_size_bytes',
+    'HTTP response size in bytes',
+    ['method', 'endpoint']
+)
+
+active_requests = Gauge(
+    'active_requests',
+    'Number of active HTTP requests'
+)
+
+http_errors_total = Counter(
+    'http_errors_total',
+    'Total HTTP errors',
+    ['method', 'endpoint', 'error_type']
+)
+
+# Business metrics
+habits_created_total = Counter(
+    'habits_created_total',
+    'Total habits created'
+)
+
+entries_logged_total = Counter(
+    'entries_logged_total',
+    'Total entries logged',
+    ['habit_id']
+)
+
+active_habits = Gauge(
+    'active_habits',
+    'Number of active habits'
+)
 
 
 class MonitoringMiddleware(BaseHTTPMiddleware):
     """
-    Middleware to track HTTP requests and send telemetry to Application Insights
+    Middleware to track HTTP requests and expose Prometheus metrics
     """
     
     async def dispatch(self, request: Request, call_next):
         start_time = time.time()
+        active_requests.inc()
         
         # Track request
         method = request.method
         path = request.url.path
         
+        # Normalize path for metrics (remove IDs)
+        endpoint = self._normalize_path(path)
+        
         try:
+            # Get request size if available
+            request_size = 0
+            if hasattr(request, '_body'):
+                request_size = len(request._body) if request._body else 0
+            
             response = await call_next(request)
-            duration_ms = (time.time() - start_time) * 1000
+            duration = time.time() - start_time
+            
+            # Get response size
+            response_size = 0
+            if hasattr(response, 'body'):
+                response_size = len(response.body) if response.body else 0
+            
+            # Record metrics
+            http_requests_total.labels(
+                method=method,
+                endpoint=endpoint,
+                status_code=response.status_code
+            ).inc()
+            
+            http_request_duration_seconds.labels(
+                method=method,
+                endpoint=endpoint
+            ).observe(duration)
+            
+            if request_size > 0:
+                http_request_size_bytes.labels(
+                    method=method,
+                    endpoint=endpoint
+                ).observe(request_size)
+            
+            if response_size > 0:
+                http_response_size_bytes.labels(
+                    method=method,
+                    endpoint=endpoint
+                ).observe(response_size)
+            
+            # Track errors
+            if response.status_code >= 400:
+                error_type = 'client_error' if 400 <= response.status_code < 500 else 'server_error'
+                http_errors_total.labels(
+                    method=method,
+                    endpoint=endpoint,
+                    error_type=error_type
+                ).inc()
             
             # Log request details
             logger.info(
-                f"{method} {path} - {response.status_code} - {duration_ms:.2f}ms",
+                f"{method} {path} - {response.status_code} - {duration*1000:.2f}ms",
                 extra={
-                    "custom_dimensions": {
-                        "method": method,
-                        "path": path,
-                        "status_code": response.status_code,
-                        "duration_ms": duration_ms,
-                        "environment": settings.ENVIRONMENT
-                    }
+                    "method": method,
+                    "path": path,
+                    "status_code": response.status_code,
+                    "duration_ms": duration * 1000,
+                    "environment": settings.ENVIRONMENT
                 }
             )
             
-            # Send to Application Insights
-            if telemetry_client:
-                telemetry_client.track_request(
-                    name=f"{method} {path}",
-                    url=str(request.url),
-                    success=response.status_code < 400,
-                    duration=duration_ms,
-                    response_code=response.status_code,
-                    http_method=method,
-                    properties={
-                        "environment": settings.ENVIRONMENT,
-                        "version": settings.VERSION
-                    }
-                )
-                telemetry_client.flush()
-            
+            active_requests.dec()
             return response
             
         except Exception as e:
-            duration_ms = (time.time() - start_time) * 1000
+            duration = time.time() - start_time
+            
+            # Track exception
+            http_errors_total.labels(
+                method=method,
+                endpoint=endpoint,
+                error_type='exception'
+            ).inc()
             
             # Log exception
             logger.error(
-                f"{method} {path} - ERROR - {duration_ms:.2f}ms: {str(e)}",
+                f"{method} {path} - ERROR - {duration*1000:.2f}ms: {str(e)}",
                 exc_info=True,
                 extra={
-                    "custom_dimensions": {
-                        "method": method,
-                        "path": path,
-                        "duration_ms": duration_ms,
-                        "error": str(e),
-                        "environment": settings.ENVIRONMENT
-                    }
+                    "method": method,
+                    "path": path,
+                    "duration_ms": duration * 1000,
+                    "error": str(e),
+                    "environment": settings.ENVIRONMENT
                 }
             )
             
-            # Track exception in Application Insights
-            if telemetry_client:
-                telemetry_client.track_exception()
-                telemetry_client.flush()
-            
+            active_requests.dec()
             raise
+    
+    def _normalize_path(self, path: str) -> str:
+        """
+        Normalize path for metrics by replacing IDs with placeholders
+        e.g., /habits/123/entries -> /habits/{id}/entries
+        """
+        import re
+        # Replace numeric IDs
+        path = re.sub(r'/\d+', '/{id}', path)
+        # Replace UUIDs
+        path = re.sub(r'/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', '/{uuid}', path, flags=re.IGNORECASE)
+        return path
 
 
 def track_event(name: str, properties: Optional[dict] = None):
-    """Track custom event in Application Insights"""
-    if telemetry_client:
-        telemetry_client.track_event(
-            name,
-            properties={
-                "environment": settings.ENVIRONMENT,
-                "version": settings.VERSION,
-                **(properties or {})
-            }
-        )
-        telemetry_client.flush()
-    else:
-        logger.info(f"Event: {name}", extra={"custom_dimensions": properties or {}})
+    """Track custom event (logged for Prometheus)"""
+    logger.info(f"Event: {name}", extra={"custom_dimensions": properties or {}})
 
 
 def track_metric(name: str, value: float, properties: Optional[dict] = None):
-    """Track custom metric in Application Insights"""
-    if telemetry_client:
-        telemetry_client.track_metric(
-            name,
-            value,
-            properties={
-                "environment": settings.ENVIRONMENT,
-                "version": settings.VERSION,
-                **(properties or {})
-            }
-        )
-        telemetry_client.flush()
-    else:
-        logger.info(f"Metric: {name}={value}", extra={"custom_dimensions": properties or {}})
+    """Track custom metric (logged for Prometheus)"""
+    logger.info(f"Metric: {name}={value}", extra={"custom_dimensions": properties or {}})
+
+
+def track_habit_created():
+    """Track habit creation"""
+    habits_created_total.inc()
+
+
+def track_entry_logged(habit_id: int):
+    """Track entry logging"""
+    entries_logged_total.labels(habit_id=str(habit_id)).inc()
+
+
+def get_metrics():
+    """Get Prometheus metrics in text format"""
+    return generate_latest()

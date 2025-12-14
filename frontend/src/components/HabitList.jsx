@@ -1,6 +1,6 @@
 import CategoryBadge from './CategoryBadge'
 
-function HabitList({ habits, onLogEntry, onEdit, onDelete, onViewCalendar, onManageCategories }) {
+function HabitList({ habits, onLogEntry, onEdit, onDelete, onViewCalendar, onManageCategories, onViewJournal }) {
   if (habits.length === 0) {
     return (
       <div className="empty-state">
@@ -54,6 +54,12 @@ function HabitList({ habits, onLogEntry, onEdit, onDelete, onViewCalendar, onMan
               ))}
             </div>
             
+            {habit.reminder_time && (
+              <div className="reminder-badge" title={`Reminder set for ${habit.reminder_time}`}>
+                ⏰ {habit.reminder_time}
+              </div>
+            )}
+            
             <div className="habit-stats">
               <div className="stat-item">
                 <span className="stat-icon">🔥</span>
@@ -87,6 +93,13 @@ function HabitList({ habits, onLogEntry, onEdit, onDelete, onViewCalendar, onMan
                 title="View calendar"
               >
                 📅 Calendar
+              </button>
+              <button
+                onClick={() => onViewJournal(habit)}
+                className="journal-btn"
+                title="View journal entries"
+              >
+                📝 Journal
               </button>
               <button
                 onClick={() => onLogEntry(habit.id)}
