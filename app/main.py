@@ -28,12 +28,18 @@ async def startup_event():
         logging.error(f"Database initialization failed: {e}")
 
 # Configure CORS for frontend (Azure + local)
+# Log CORS origins for debugging
+import logging
+logger = logging.getLogger(__name__)
+logger.info(f"CORS allowed origins: {settings.cors_origins}")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Add monitoring middleware
