@@ -39,16 +39,23 @@ class HabitService:
             # Update journal if entry already exists
             self.entries.update_journal(habit_id, today, journal)
 
-    def list_with_streaks(self, user_id: int, today: date):
+    def list_with_streaks(self, user_id: int, today: date, category_id: Optional[int] = None):
         out = []
-        for h in self.habits.list_by_user(user_id):
+        if category_id:
+            habits_list = self.habits.list_by_user_and_category(user_id, category_id)
+        else:
+            habits_list = self.habits.list_by_user(user_id)
+        
+        for h in habits_list:
             # Fetch last 365 days to calculate current streak
             start = today - timedelta(days=365)
             dates = set(self.entries.dates_between(h.id, start, today))
+            categories = [{"id": c.id, "name": c.name, "color": c.color} for c in h.categories]
             out.append({"id": h.id, "name": h.name, "goal_type": h.goal_type,
                         "streak": current_streak(dates, today),
                         "best_streak": best_streak(dates),
-                        "reminder_time": h.reminder_time})
+                        "reminder_time": h.reminder_time,
+                        "categories": categories})
         return out
 
     def update(self, habit_id: int, user_id: int, name: Optional[str], goal_type: Optional[str], reminder_time: Union[Optional[time], object] = _REMINDER_TIME_SENTINEL):

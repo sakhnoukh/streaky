@@ -7,7 +7,7 @@ from app.config import settings
 from app.db import create_tables
 from app.logging import setup_logging_middleware
 from app.monitoring import MonitoringMiddleware
-from app.routers import auth, habits
+from app.routers import auth, categories, habits
 from app.routers import monitoring
 
 # Create FastAPI app
@@ -158,6 +158,7 @@ setup_logging_middleware(app)
 app.include_router(monitoring.router)  # Health checks and metrics
 app.include_router(auth.router)
 app.include_router(habits.router)
+app.include_router(categories.router)
 
 @app.get("/")
 async def root():
@@ -175,6 +176,15 @@ async def root():
                 "delete": "DELETE /habits/{id}",
                 "log_entry": "POST /habits/{id}/entries",
                 "stats": "GET /habits/{id}/stats"
+            },
+            "categories": {
+                "create": "POST /categories",
+                "list": "GET /categories",
+                "get": "GET /categories/{id}",
+                "update": "PUT /categories/{id}",
+                "delete": "DELETE /categories/{id}",
+                "add_habit": "POST /categories/{id}/habits/{habit_id}",
+                "remove_habit": "DELETE /categories/{id}/habits/{habit_id}"
             },
             "auth": {
                 "login": "POST /token"

@@ -4,16 +4,44 @@ from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
 
 
+# Category schemas
+class CategoryCreate(BaseModel):
+    name: str
+    color: str = "#6366f1"
+
+
+class CategoryUpdate(BaseModel):
+    name: Optional[str] = None
+    color: Optional[str] = None
+
+
+class CategoryOut(BaseModel):
+    model_config = {"from_attributes": True}
+
+    id: int
+    name: str
+    color: str
+
+
+class CategoryBrief(BaseModel):
+    id: int
+    name: str
+    color: str
+
+
+# Habit schemas
 class HabitCreate(BaseModel):
     name: str
     goal_type: str
     reminder_time: Optional[time] = None
+    category_ids: Optional[List[int]] = None
 
 
 class HabitUpdate(BaseModel):
     name: Optional[str] = None
     goal_type: Optional[str] = None
     reminder_time: Optional[time] = None
+    category_ids: Optional[List[int]] = None
 
 
 class HabitLog(BaseModel):
@@ -28,6 +56,7 @@ class HabitOut(BaseModel):
     name: str
     goal_type: str
     reminder_time: Optional[time] = None
+    categories: List[CategoryBrief] = []
 
 class HabitWithStreak(BaseModel):
     id: int
@@ -36,6 +65,7 @@ class HabitWithStreak(BaseModel):
     streak: int
     best_streak: int
     reminder_time: Optional[time] = None
+    categories: List[CategoryBrief] = []
 
 class StatsOut(BaseModel):
     habit_id: int
