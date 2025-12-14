@@ -61,8 +61,13 @@ dmypy.json
 
 # Ruff
 .ruff_cache/
+
+# Deployment artifacts
 deploy.zip
+*.zip
+
+# Misc
 create_test_user.py
-webapp_logs.zip
 LogFiles/
 deployments/
+*.pdf
