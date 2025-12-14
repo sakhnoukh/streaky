@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.config import settings
 from app.db import create_tables
@@ -27,20 +28,40 @@ async def startup_event():
         import logging
         logging.error(f"Database initialization failed: {e}")
 
-# Configure CORS for frontend (Azure + local)
+# Configure CORS for frontend (Azure + local) - MUST be first middleware
 # Log CORS origins for debugging
 import logging
 logger = logging.getLogger(__name__)
 logger.info(f"CORS allowed origins: {settings.cors_origins}")
 
+# CORS middleware must be added first to handle preflight requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
     expose_headers=["*"],
+    max_age=600,
 )
+
+# Add explicit CORS handler for OPTIONS requests
+@app.options("/{full_path:path}")
+async def options_handler(request: Request, full_path: str):
+    """Handle OPTIONS requests explicitly to ensure CORS headers are always present"""
+    origin = request.headers.get("origin")
+    if origin in settings.cors_origins:
+        return Response(
+            status_code=200,
+            headers={
+                "Access-Control-Allow-Origin": origin,
+                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+                "Access-Control-Allow-Headers": "*",
+                "Access-Control-Allow-Credentials": "true",
+                "Access-Control-Max-Age": "600",
+            }
+        )
+    return Response(status_code=200)
 
 # Add monitoring middleware
 app.add_middleware(MonitoringMiddleware)

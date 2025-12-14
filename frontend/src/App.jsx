@@ -29,12 +29,14 @@ function App() {
 
   // Configure axios defaults
   useEffect(() => {
+    console.log('API URL:', API_URL)
+    console.log('Current token exists:', !!token)
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
       console.log('Authorization header set:', axios.defaults.headers.common['Authorization']?.substring(0, 50) + '...')
     } else {
       delete axios.defaults.headers.common['Authorization']
-      console.log('Authorization header removed')
+      console.log('Authorization header removed - user not logged in')
     }
   }, [token])
   
@@ -165,13 +167,24 @@ function App() {
     } catch (err) {
       console.error('Create habit error:', err)
       console.error('Error response:', err.response?.data)
-      if (err.response?.status === 401) {
+      console.error('Error code:', err.code)
+      console.error('Error message:', err.message)
+      console.error('API URL used:', API_URL)
+      
+      if (err.code === 'ERR_NETWORK' || err.message?.includes('Network Error')) {
+        showToast(`Network error: Cannot connect to ${API_URL}. Please check your connection.`, 'error')
+        setError(`Cannot connect to server. API URL: ${API_URL}`)
+      } else if (err.response?.status === 401) {
         showToast('Session expired. Please log in again.', 'error')
         handleLogout()
       } else if (err.response?.status === 409) {
         showToast('Habit name already exists', 'error')
+      } else if (err.response?.status === 403) {
+        showToast('CORS error: Request blocked. Please contact support.', 'error')
       } else {
-        showToast(`Failed to create habit: ${err.response?.data?.detail || err.message}`, 'error')
+        const errorMsg = err.response?.data?.detail || err.message || 'Unknown error'
+        showToast(`Failed to create habit: ${errorMsg}`, 'error')
+        setError(`Error: ${errorMsg}`)
       }
     }
   }
