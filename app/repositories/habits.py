@@ -1,7 +1,7 @@
 from typing import Optional, List
 from sqlalchemy.orm import Session
 
-from app.models import Habit
+from app.models import Category, Habit
 
 from .base import HabitRepository
 
@@ -22,6 +22,14 @@ class SqlAlchemyHabitRepository(HabitRepository):
 
     def list_by_user(self, user_id: int) -> List[Habit]:
         return self.session.query(Habit).filter(Habit.user_id == user_id).all()
+
+    def list_by_user_and_category(self, user_id: int, category_id: int) -> List[Habit]:
+        return (
+            self.session.query(Habit)
+            .filter(Habit.user_id == user_id)
+            .filter(Habit.categories.any(Category.id == category_id))
+            .all()
+        )
 
     def exists_name(self, user_id: int, name: str) -> bool:
         return (
@@ -50,3 +58,23 @@ class SqlAlchemyHabitRepository(HabitRepository):
         self.session.delete(habit)
         self.session.commit()
         return True
+
+    def add_category(self, habit_id: int, category: Category) -> Optional[Habit]:
+        habit = self.get(habit_id)
+        if not habit:
+            return None
+        if category not in habit.categories:
+            habit.categories.append(category)
+            self.session.commit()
+            self.session.refresh(habit)
+        return habit
+
+    def remove_category(self, habit_id: int, category: Category) -> Optional[Habit]:
+        habit = self.get(habit_id)
+        if not habit:
+            return None
+        if category in habit.categories:
+            habit.categories.remove(category)
+            self.session.commit()
+            self.session.refresh(habit)
+        return habit

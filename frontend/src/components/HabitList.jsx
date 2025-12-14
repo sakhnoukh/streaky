@@ -1,4 +1,6 @@
-function HabitList({ habits, onLogEntry, onEdit, onDelete, onViewCalendar }) {
+import CategoryBadge from './CategoryBadge'
+
+function HabitList({ habits, onLogEntry, onEdit, onDelete, onViewCalendar, onManageCategories }) {
   if (habits.length === 0) {
     return (
       <div className="empty-state">
@@ -22,6 +24,13 @@ function HabitList({ habits, onLogEntry, onEdit, onDelete, onViewCalendar }) {
               <h3>{habit.name}</h3>
               <div className="habit-actions">
                 <button
+                  onClick={() => onManageCategories(habit)}
+                  className="action-btn category-btn"
+                  title="Manage categories"
+                >
+                  🏷️
+                </button>
+                <button
                   onClick={() => onEdit(habit)}
                   className="action-btn edit-btn"
                   title="Edit habit"
@@ -38,7 +47,12 @@ function HabitList({ habits, onLogEntry, onEdit, onDelete, onViewCalendar }) {
               </div>
             </div>
             
-            <span className="goal-badge">{habit.goal_type}</span>
+            <div className="habit-badges">
+              <span className="goal-badge">{habit.goal_type}</span>
+              {habit.categories && habit.categories.map((cat) => (
+                <CategoryBadge key={cat.id} category={cat} small />
+              ))}
+            </div>
             
             <div className="habit-stats">
               <div className="stat-item">

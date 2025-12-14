@@ -49,10 +49,11 @@ def create_habit(
 
 @router.get("/habits", response_model=List[HabitWithStreak])
 def list_habits(
+    category_id: int = None,
     service: HabitService = Depends(get_habit_service),
     current_user: int = Depends(get_current_user),
 ):
-    return service.list_with_streaks(current_user, date.today())
+    return service.list_with_streaks(current_user, date.today(), category_id)
 
 @router.post("/habits/{habit_id}/entries")
 def log_entry(

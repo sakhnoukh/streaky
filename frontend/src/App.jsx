@@ -8,6 +8,9 @@ import ConfirmDialog from './components/ConfirmDialog'
 import Calendar from './components/Calendar'
 import Toast from './components/Toast'
 import TodaySummary from './components/TodaySummary'
+import CategoryManager from './components/CategoryManager'
+import CategoryFilter from './components/CategoryFilter'
+import HabitCategoryAssign from './components/HabitCategoryAssign'
 import './App.css'
 
 // Use environment variable for API URL, fallback to localhost
@@ -22,6 +25,10 @@ function App() {
   const [editingHabit, setEditingHabit] = useState(null)
   const [deletingHabit, setDeletingHabit] = useState(null)
   const [viewingCalendar, setViewingCalendar] = useState(null)
+  const [categories, setCategories] = useState([])
+  const [showCategoryManager, setShowCategoryManager] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState(null)
+  const [assigningCategories, setAssigningCategories] = useState(null)
 
   // Configure axios defaults
   useEffect(() => {
@@ -32,12 +39,20 @@ function App() {
     }
   }, [token])
 
-  // Fetch habits when logged in
+  // Fetch habits and categories when logged in
+  useEffect(() => {
+    if (token) {
+      fetchHabits()
+      fetchCategories()
+    }
+  }, [token])
+
+  // Refetch habits when category filter changes
   useEffect(() => {
     if (token) {
       fetchHabits()
     }
-  }, [token])
+  }, [selectedCategory])
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type })
@@ -103,19 +118,113 @@ function App() {
     setToken(null)
     localStorage.removeItem('token')
     setHabits([])
+    setCategories([])
+    setSelectedCategory(null)
   }
 
   const fetchHabits = async () => {
     try {
       setLoading(true)
       setError(null)
-      const response = await axios.get(`${API_URL}/habits`)
+      const params = selectedCategory ? { category_id: selectedCategory } : {}
+      const response = await axios.get(`${API_URL}/habits`, { params })
       setHabits(response.data)
     } catch (err) {
       setError('Failed to fetch habits')
       console.error('Fetch error:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/categories`)
+      setCategories(response.data)
+    } catch (err) {
+      console.error('Fetch categories error:', err)
+    }
+  }
+
+  const handleAddCategory = async (name, color) => {
+    try {
+      await axios.post(`${API_URL}/categories`, { name, color })
+      await fetchCategories()
+      showToast('Category created! 📁', 'success')
+    } catch (err) {
+      if (err.response?.status === 409) {
+        showToast('Category name already exists', 'error')
+      } else {
+        showToast('Failed to create category', 'error')
+      }
+      console.error('Create category error:', err)
+    }
+  }
+
+  const handleUpdateCategory = async (categoryId, name, color) => {
+    try {
+      await axios.put(`${API_URL}/categories/${categoryId}`, { name, color })
+      await fetchCategories()
+      await fetchHabits()
+      showToast('Category updated! ✓', 'success')
+    } catch (err) {
+      showToast('Failed to update category', 'error')
+      console.error('Update category error:', err)
+    }
+  }
+
+  const handleDeleteCategory = async (categoryId) => {
+    try {
+      await axios.delete(`${API_URL}/categories/${categoryId}`)
+      await fetchCategories()
+      await fetchHabits()
+      if (selectedCategory === categoryId) {
+        setSelectedCategory(null)
+      }
+      showToast('Category deleted', 'info')
+    } catch (err) {
+      showToast('Failed to delete category', 'error')
+      console.error('Delete category error:', err)
+    }
+  }
+
+  const handleAddHabitToCategory = async (habitId, categoryId) => {
+    try {
+      await axios.post(`${API_URL}/categories/${categoryId}/habits/${habitId}`)
+      await fetchHabits()
+      // Update the assigning habit with new categories
+      const updatedHabit = habits.find(h => h.id === habitId)
+      if (updatedHabit) {
+        const cat = categories.find(c => c.id === categoryId)
+        if (cat) {
+          setAssigningCategories({
+            ...updatedHabit,
+            categories: [...(updatedHabit.categories || []), cat]
+          })
+        }
+      }
+      showToast('Category added to habit! 🏷️', 'success')
+    } catch (err) {
+      showToast('Failed to add category', 'error')
+      console.error('Add habit to category error:', err)
+    }
+  }
+
+  const handleRemoveHabitFromCategory = async (habitId, categoryId) => {
+    try {
+      await axios.delete(`${API_URL}/categories/${categoryId}/habits/${habitId}`)
+      await fetchHabits()
+      // Update the assigning habit with removed category
+      if (assigningCategories && assigningCategories.id === habitId) {
+        setAssigningCategories({
+          ...assigningCategories,
+          categories: assigningCategories.categories.filter(c => c.id !== categoryId)
+        })
+      }
+      showToast('Category removed from habit', 'info')
+    } catch (err) {
+      showToast('Failed to remove category', 'error')
+      console.error('Remove habit from category error:', err)
     }
   }
 
@@ -188,13 +297,27 @@ function App() {
     <div className="App">
       <header className="App-header">
         <h1>🎯 Streaky</h1>
-        <button onClick={handleLogout} className="logout-btn">
-          Logout
-        </button>
+        <div className="header-actions">
+          <button onClick={() => setShowCategoryManager(true)} className="manage-categories-btn">
+            📁 Categories
+          </button>
+          <button onClick={handleLogout} className="logout-btn">
+            Logout
+          </button>
+        </div>
       </header>
 
       <main className="App-main">
         <TodaySummary habits={habits} />
+        
+        {categories.length > 0 && (
+          <CategoryFilter
+            categories={categories}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+          />
+        )}
+        
         <AddHabit onAdd={handleAddHabit} />
         
         {loading ? (
@@ -206,6 +329,7 @@ function App() {
             onEdit={setEditingHabit}
             onDelete={setDeletingHabit}
             onViewCalendar={setViewingCalendar}
+            onManageCategories={setAssigningCategories}
           />
         )}
       </main>
@@ -244,6 +368,26 @@ function App() {
             setViewingCalendar(null)
             fetchHabits() // Refresh habits to update any changes
           }}
+        />
+      )}
+
+      {showCategoryManager && (
+        <CategoryManager
+          categories={categories}
+          onAdd={handleAddCategory}
+          onUpdate={handleUpdateCategory}
+          onDelete={handleDeleteCategory}
+          onClose={() => setShowCategoryManager(false)}
+        />
+      )}
+
+      {assigningCategories && (
+        <HabitCategoryAssign
+          habit={assigningCategories}
+          categories={categories}
+          onAddCategory={handleAddHabitToCategory}
+          onRemoveCategory={handleRemoveHabitFromCategory}
+          onClose={() => setAssigningCategories(null)}
         />
       )}
     </div>
