@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import './JournalDialog.css'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8002'
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? '/api' : 'http://localhost:8002')
 
 function JournalDialog({ habit, entryDate, onClose, onSave }) {
   const [journal, setJournal] = useState('')

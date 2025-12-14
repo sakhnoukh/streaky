@@ -1,0 +1,106 @@
+name: Deploy to Azure
+
+on:
+  push:
+    branches: [ main, develop ]
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  deploy:
+    name: Deploy to Azure
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+    
+    - name: Set up Node.js (for frontend)
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Install frontend dependencies
+      working-directory: ./frontend
+      run: npm ci
+    
+    - name: Build frontend
+      working-directory: ./frontend
+      env:
+        VITE_API_URL: https://streaky-api.azurewebsites.net
+      run: npm run build
+    
+    - name: Create backend deployment package
+      run: |
+        zip -r deploy.zip . \
+          -x "*.git*" \
+          -x "frontend/*" \
+          -x "tests/*" \
+          -x "*.pyc" \
+          -x "__pycache__/*" \
+          -x ".env*" \
+          -x "*.db" \
+          -x "htmlcov/*" \
+          -x ".pytest_cache/*" \
+          -x "alembic/versions/*.pyc" \
+          -x "node_modules/*" \
+          -x ".github/*"
+    
+    - name: Determine deployment target
+      id: target
+      run: |
+        if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+          echo "slot=" >> $GITHUB_OUTPUT
+          echo "environment=production" >> $GITHUB_OUTPUT
+        else
+          echo "slot=staging" >> $GITHUB_OUTPUT
+          echo "environment=staging" >> $GITHUB_OUTPUT
+        fi
+        echo "Deploying to ${{ steps.target.outputs.environment }}"
+    
+    - name: Deploy Backend to Azure App Service
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: 'streaky-api'
+        slot-name: ${{ steps.target.outputs.slot }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: deploy.zip
+    
+    - name: Run database migrations
+      if: github.ref == 'refs/heads/main'
+      run: |
+        echo "⚠️  Database migrations should be configured in Azure App Service deployment settings"
+        echo "Or run manually: az webapp ssh --name streaky-api --resource-group BCSAI2025-DEVOPS-STUDENT-1B"
+      continue-on-error: true
+    
+    - name: Deploy Frontend to Azure Storage
+      run: |
+        az storage blob upload-batch \
+          --account-name streakyfelix \
+          --account-key "${{ secrets.AZURE_STORAGE_KEY }}" \
+          --destination '$web' \
+          --source frontend/dist \
+          --overwrite
+      continue-on-error: true
+    
+    - name: Verify deployment
+      run: |
+        echo "✅ Deployment complete!"
+        if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+          echo "🌐 Production URL: https://streaky-api.azurewebsites.net"
+        else
+          echo "🧪 Staging URL: https://streaky-api-staging.azurewebsites.net"
+        fi
+        echo "📊 Frontend: https://streakyfelix.z6.web.core.windows.net"

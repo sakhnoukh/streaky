@@ -3,7 +3,7 @@ import axios from 'axios'
 import JournalDialog from './JournalDialog'
 import './JournalEntries.css'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8002'
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? '/api' : 'http://localhost:8002')
 
 function JournalEntries({ habit, onClose }) {
   const [entries, setEntries] = useState([])

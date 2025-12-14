@@ -12,8 +12,8 @@ import Toast from './components/Toast'
 import TodaySummary from './components/TodaySummary'
 import './App.css'
 
-// Use environment variable for API URL, fallback to localhost
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8002'
+// Use environment variable for API URL, fallback to proxy or localhost
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? '/api' : 'http://localhost:8002')
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token'))
@@ -31,10 +31,33 @@ function App() {
   useEffect(() => {
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      console.log('Authorization header set:', axios.defaults.headers.common['Authorization']?.substring(0, 50) + '...')
     } else {
       delete axios.defaults.headers.common['Authorization']
+      console.log('Authorization header removed')
     }
   }, [token])
+  
+  // Add axios interceptor to handle 401 errors globally
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          console.log('401 Unauthorized - logging out')
+          // Clear token and redirect to login
+          setToken(null)
+          localStorage.removeItem('token')
+          setHabits([])
+          setToast({ message: 'Session expired. Please log in again.', type: 'error' })
+        }
+        return Promise.reject(error)
+      }
+    )
+    return () => {
+      axios.interceptors.response.eject(interceptor)
+    }
+  }, [])
 
   // Fetch habits when logged in
   useEffect(() => {
@@ -133,16 +156,23 @@ function App() {
       if (reminderTime) {
         payload.reminder_time = reminderTime
       }
-      await axios.post(`${API_URL}/habits`, payload)
+      console.log('Creating habit with payload:', payload)
+      console.log('Authorization header:', axios.defaults.headers.common['Authorization'])
+      const response = await axios.post(`${API_URL}/habits`, payload)
+      console.log('Habit created successfully:', response.data)
       await fetchHabits()
       showToast('Habit created successfully! 🎉', 'success')
     } catch (err) {
-      if (err.response?.status === 409) {
+      console.error('Create habit error:', err)
+      console.error('Error response:', err.response?.data)
+      if (err.response?.status === 401) {
+        showToast('Session expired. Please log in again.', 'error')
+        handleLogout()
+      } else if (err.response?.status === 409) {
         showToast('Habit name already exists', 'error')
       } else {
-        showToast('Failed to create habit', 'error')
+        showToast(`Failed to create habit: ${err.response?.data?.detail || err.message}`, 'error')
       }
-      console.error('Create habit error:', err)
     }
   }
 
